@@ -19,5 +19,8 @@ return [
         'customer-unsuspended' => 'تم رفع التعليق وإعادة تفعيل حساب العميل.',
         'customer-subscription-updated' => 'تم تحديث مدة اشتراك العميل بنجاح.',
         'customer-bot-updated' => 'تم حفظ إعدادات بوت العميل بنجاح.',
+
+        // Platform AI keys settings.
+        'settings-updated' => 'تم حفظ مفاتيح مزوّدي الذكاء الاصطناعي بنجاح.',
     ],
 ];

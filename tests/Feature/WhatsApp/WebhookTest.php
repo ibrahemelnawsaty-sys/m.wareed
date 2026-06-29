@@ -32,8 +32,8 @@ beforeEach(function () {
 
     // These tests exercise webhook routing/idempotency/tenancy, not the AI.
     // Bind the deterministic, zero-cost fallback so the reply is predictable
-    // (the account system_prompt) and no Gemini HTTP call is made here. The
-    // real Gemini path is covered by tests/Feature/AI/GeminiReplyServiceTest.
+    // (the account system_prompt) and no AI HTTP call is made here. The
+    // real AI path is covered by tests/Feature/AI/AiReplyServiceTest.
     app()->bind(BotReplyService::class, FallbackReplyService::class);
 
     // Webhook entry resolves its own tenant; tests start with none bound.

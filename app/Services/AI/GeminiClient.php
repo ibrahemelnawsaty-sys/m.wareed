@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\AI;
 
+use App\Services\AI\Providers\ChatProvider;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Throwable;
 
 /**
  * Thin transport over the Gemini `generateContent` REST endpoint (ADR-04, §12).
@@ -14,11 +14,11 @@ use Throwable;
  * Responsibilities are deliberately narrow: build the request body, perform a
  * single synchronous HTTP call (no internal retry loop that would drain tokens,
  * §12), and return the reply text plus token usage. It does not decide on
- * fallbacks or pricing — that belongs to {@see GeminiReplyService}.
+ * fallbacks or pricing — that belongs to the reply service.
  *
- * The API key is passed as a query parameter and is NEVER logged (§13).
+ * The API key is passed in the `x-goog-api-key` header and is NEVER logged (§13).
  */
-class GeminiClient
+class GeminiClient implements ChatProvider
 {
     /**
      * Call Gemini and return the generated text with token accounting.
@@ -64,24 +64,26 @@ class GeminiClient
         ];
 
         try {
-            // Key travels as a query param so it never lands in a header/log (§13).
+            // The key travels in the `x-goog-api-key` header — NOT the URL — so
+            // it never lands in a request URL that Guzzle would echo into a
+            // transport-failure exception message or log (§13).
             $response = Http::timeout($timeout)
-                ->withQueryParameters(['key' => (string) $apiKey])
+                ->withHeaders(['x-goog-api-key' => (string) $apiKey])
                 ->asJson()
                 ->acceptJson()
                 ->post($url, $body);
-        } catch (ConnectionException $e) {
-            // Transport failure (timeout, DNS, refused). Surface explicitly —
-            // the message carries no key (URL has no query string here, §13).
+        } catch (ConnectionException) {
+            // Transport failure (timeout, DNS, refused). Surface explicitly with
+            // a clean message and NO `previous`: the underlying exception could
+            // carry transport details we never want serialized into a log (§13).
             throw new GeminiException(
                 "Gemini transport failure for model [{$model}].",
-                previous: $e,
             );
         }
 
         if ($response->failed()) {
-            // Explicit failure, no swallowing (§3). Do NOT include the URL
-            // (it carries the key in the query string) nor the raw body.
+            // Explicit failure, no swallowing (§3). Status + model only — never
+            // the raw body (which can echo request context) (§13).
             throw new GeminiException(sprintf(
                 'Gemini HTTP error: status %d for model [%s].',
                 $response->status(),
@@ -125,11 +127,7 @@ class GeminiClient
 
         $text = '';
         foreach ($parts as $part) {
-            try {
-                $chunk = data_get($part, 'text');
-            } catch (Throwable) {
-                continue;
-            }
+            $chunk = data_get($part, 'text');
 
             if (is_string($chunk)) {
                 $text .= $chunk;

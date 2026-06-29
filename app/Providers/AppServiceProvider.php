@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Services\AI\AiReplyService;
 use App\Services\AI\Contracts\BotReplyService;
-use App\Services\AI\GeminiReplyService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,9 +18,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TenantContext::class);
 
-        // Real bot reply provider: Gemini 2.5 Flash-Lite (ADR-04, §12). It keeps
+        // Real bot reply provider: multi-provider (gemini/openai/deepseek),
+        // selected per account by the admin (ADR-04, §12). It keeps
         // FallbackReplyService as an internal safety net on failure/timeout.
-        $this->app->bind(BotReplyService::class, GeminiReplyService::class);
+        $this->app->bind(BotReplyService::class, AiReplyService::class);
     }
 
     /**

@@ -77,4 +77,33 @@ return [
         'playground_daily_cap' => (int) env('GEMINI_PLAYGROUND_DAILY_CAP', 200),
     ],
 
+    // OpenAI Chat Completions — multi-provider AI (§12). The .env key is the
+    // last-resort fallback; the admin-managed platform key (encrypted in the
+    // `settings` table) and the tenant's own encrypted key take precedence.
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+        'timeout' => (int) env('OPENAI_TIMEOUT', 20),
+
+        // Pricing per 1,000,000 tokens, in micro-USD (integers, §3). Approximate
+        // gpt-4o-mini list pricing: input $0.15 /Mtok, output $0.60 /Mtok.
+        'input_micros_per_mtok' => (int) env('OPENAI_INPUT_MICROS_PER_MTOK', 150000),
+        'output_micros_per_mtok' => (int) env('OPENAI_OUTPUT_MICROS_PER_MTOK', 600000),
+    ],
+
+    // DeepSeek — OpenAI-compatible Chat Completions (§12). Same key-resolution
+    // precedence as OpenAI; the .env key is the last-resort fallback.
+    'deepseek' => [
+        'api_key' => env('DEEPSEEK_API_KEY'),
+        'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
+        'base_url' => env('DEEPSEEK_BASE_URL', 'https://api.deepseek.com'),
+        'timeout' => (int) env('DEEPSEEK_TIMEOUT', 20),
+
+        // Pricing per 1,000,000 tokens, in micro-USD (integers, §3). Approximate
+        // deepseek-chat pricing: input $0.27 /Mtok, output $1.10 /Mtok.
+        'input_micros_per_mtok' => (int) env('DEEPSEEK_INPUT_MICROS_PER_MTOK', 270000),
+        'output_micros_per_mtok' => (int) env('DEEPSEEK_OUTPUT_MICROS_PER_MTOK', 1100000),
+    ],
+
 ];

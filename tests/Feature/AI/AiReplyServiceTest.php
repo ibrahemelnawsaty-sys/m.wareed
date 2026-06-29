@@ -7,12 +7,15 @@ use App\Models\KnowledgeDocument;
 use App\Models\Message;
 use App\Models\UsageCounter;
 use App\Models\WhatsappAccount;
+use App\Services\AI\AiReplyService;
 use App\Services\AI\Contracts\BotReplyService;
 use App\Services\AI\FallbackReplyService;
-use App\Services\AI\GeminiReplyService;
+use App\Services\AI\GeminiClient;
+use App\Services\AI\GeminiException;
 use App\Services\AI\ReplyResult;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -274,7 +277,8 @@ it('never logs the api key on failure', function () {
     }
 });
 
-// 7) Tenant key preferred over platform key, sent as the query param.
+// 7) Tenant key preferred over platform key, sent in the x-goog-api-key header
+//    — never the URL (§13).
 it('prefers the encrypted tenant key over the platform key', function () {
     config()->set('services.gemini.api_key', 'PLATFORM-KEY');
 
@@ -287,15 +291,16 @@ it('prefers the encrypted tenant key over the platform key', function () {
     app(BotReplyService::class)->generateReply($account, $conversation, 'مرحبا');
 
     Http::assertSent(function ($request) {
-        return str_contains($request->url(), 'key=TENANT-KEY-123')
-            && ! str_contains($request->url(), 'PLATFORM-KEY')
+        return $request->hasHeader('x-goog-api-key', 'TENANT-KEY-123')
+            && ! $request->hasHeader('x-goog-api-key', 'PLATFORM-KEY')
+            && ! str_contains($request->url(), 'TENANT-KEY-123')   // key never in the URL (§13)
             && str_contains($request->url(), 'gemini-2.5-flash-lite:generateContent');
     });
 });
 
-// 8) The contract resolves to the real Gemini implementation now.
-it('binds the BotReplyService contract to the Gemini implementation', function () {
-    expect(app(BotReplyService::class))->toBeInstanceOf(GeminiReplyService::class);
+// 8) The contract resolves to the real multi-provider implementation now.
+it('binds the BotReplyService contract to the multi-provider implementation', function () {
+    expect(app(BotReplyService::class))->toBeInstanceOf(AiReplyService::class);
 });
 
 // 9) Daily cap: an over-limit tenant gets the fallback and Gemini is not called.
@@ -324,4 +329,30 @@ it('uses the fallback without calling gemini when the tenant is over the daily c
 
     expect($result->reply)->toBe(FallbackReplyService::DEFAULT_GREETING);
     Http::assertNothingSent();
+});
+
+// 10) Transport failure must not leak the key via the exception chain (§13).
+//     Guards the review HIGH: the thrown exception (which report() serialises)
+//     carries a clean message and NO previous, so a key embedded in a cURL
+//     error can never reach the logs.
+it('throws a key-free exception with no previous when the gemini transport fails', function () {
+    Http::fake([
+        GEMINI_HOST.'/*' => fn () => throw new ConnectionException(
+            'cURL error 28: timed out for https://'.GEMINI_HOST.'/v1beta/models/x:generateContent?key=SUPER-SECRET-TRANSPORT-KEY'
+        ),
+    ]);
+
+    try {
+        app(GeminiClient::class)->generate(
+            'system',
+            [['role' => 'user', 'text' => 'مرحبا']],
+            0.5,
+            'SUPER-SECRET-TRANSPORT-KEY',
+            'gemini-2.5-flash-lite',
+        );
+        expect(false)->toBeTrue(); // unreachable — generate() must throw
+    } catch (GeminiException $e) {
+        expect($e->getMessage())->not->toContain('SUPER-SECRET-TRANSPORT-KEY')
+            ->and($e->getPrevious())->toBeNull();
+    }
 });

@@ -113,9 +113,11 @@ test('playground uses the current tenant account only', function () {
     Http::assertSent(function ($request) {
         $system = (string) data_get($request->data(), 'systemInstruction.parts.0.text');
 
-        // Built from THIS tenant's persona, sent with THIS tenant's key.
+        // Built from THIS tenant's persona, sent with THIS tenant's key in the
+        // x-goog-api-key header — and never in the URL (§13).
         return str_contains($system, 'بصمة-المستأجر-الحالي')
-            && str_contains($request->url(), 'key=TENANT-A-KEY');
+            && $request->hasHeader('x-goog-api-key', 'TENANT-A-KEY')
+            && ! str_contains($request->url(), 'TENANT-A-KEY');
     });
 });
 

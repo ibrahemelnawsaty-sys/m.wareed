@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\BotSettingsController;
 use App\Http\Controllers\Dashboard\ConversationController;
@@ -104,6 +105,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Platform-wide analytics (all tenants).
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Platform AI keys (gemini/openai/deepseek). Admin-only, CSRF + FormRequest.
+    // The keys are secrets: the edit page renders presence only, and a blank
+    // field on update keeps the stored key (non-destructive, §3, §13).
+    Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
 });
 
 require __DIR__.'/auth.php';

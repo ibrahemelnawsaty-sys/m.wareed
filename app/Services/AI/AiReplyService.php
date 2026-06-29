@@ -11,21 +11,28 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Real {@see BotReplyService} backed by Gemini 2.5 Flash-Lite (ADR-04, §12).
+ * Multi-provider {@see BotReplyService} (§12). Resolves the account's provider,
+ * key, model and prices via {@see ProviderResolver}, builds a hardened prompt,
+ * calls the provider, computes an integer token cost, records per-tenant usage,
+ * and returns a {@see ReplyResult}.
  *
- * Flow: build a hardened prompt → call Gemini → compute integer token cost →
- * record per-tenant usage → return a {@see ReplyResult}. On any failure or
- * timeout the error is reported and a graceful {@see FallbackReplyService}
- * reply is returned instead — the webhook never crashes and there is no
- * token-draining retry loop (§12, §3).
+ * The default tenant (ai_provider = 'gemini', no override) behaves exactly as the
+ * previous Gemini-only path: same key resolution, same model, same prices, same
+ * cost arithmetic — so existing behaviour is preserved while OpenAI/DeepSeek
+ * become selectable per account by the admin (§12 — documented choice, no silent
+ * swap).
  *
- * Secrets: the tenant's encrypted `ai_api_key` is preferred over the platform
- * key, and neither is ever logged (§13).
+ * On any failure or timeout the error is reported and a graceful
+ * {@see FallbackReplyService} reply is returned — the webhook never crashes and
+ * there is no token-draining retry loop (§12, §3).
+ *
+ * Secrets: the resolved key (tenant → platform setting → .env) is never logged
+ * (§13).
  */
-class GeminiReplyService implements BotReplyService
+class AiReplyService implements BotReplyService
 {
     public function __construct(
-        private readonly GeminiClient $client,
+        private readonly ProviderResolver $resolver,
         private readonly PromptBuilder $promptBuilder,
         private readonly UsageRecorder $usageRecorder,
         private readonly FallbackReplyService $fallback,
@@ -37,32 +44,41 @@ class GeminiReplyService implements BotReplyService
         string $incomingText,
     ): ReplyResult {
         // Daily per-tenant message cap (§12). When the tenant has reached it we
-        // reply with the neutral fallback instead of calling — and billing —
-        // Gemini. Disabled by default (cap <= 0), so no extra query on the hot
+        // reply with the neutral fallback instead of calling — and billing — a
+        // provider. Disabled by default (cap <= 0), so no extra query on the hot
         // path unless an operator opts in.
         if (! $this->withinDailyCap($account->tenant_id)) {
             return $this->fallback->generateReply($account, $conversation, $incomingText);
         }
 
         try {
+            // Provider, key, model and prices all come from the account's
+            // admin-set fields (§12 — no silent provider/model swap).
+            $resolved = $this->resolver->resolve($account);
+
             $systemInstruction = $this->promptBuilder->buildSystemInstruction($account);
             $turns = $this->promptBuilder->buildTurns($conversation, $incomingText);
 
-            // Account temperature is an int 0..100; Gemini wants a float clamped
-            // to its supported 0.0..2.0 range (§12 — no out-of-range value).
+            // Account temperature is an int 0..100; providers want a float clamped
+            // to a sane 0.0..2.0 range (§12 — no out-of-range value).
             $temperature = max(0.0, min(2.0, $account->temperature / 100));
 
-            $result = $this->client->generate(
+            $result = $resolved['provider']->generate(
                 systemInstruction: $systemInstruction,
                 turns: $turns,
                 temperature: $temperature,
-                apiKey: $this->resolveApiKey($account),
-                model: $this->resolveModel(),
+                apiKey: $resolved['apiKey'],
+                model: $resolved['model'],
             );
 
             $tokensIn = $result['tokensIn'];
             $tokensOut = $result['tokensOut'];
-            $costMicros = $this->costMicros($tokensIn, $tokensOut);
+            $costMicros = $this->costMicros(
+                $tokensIn,
+                $tokensOut,
+                $resolved['inMicrosPerMtok'],
+                $resolved['outMicrosPerMtok'],
+            );
 
             // Record per-tenant usage after a successful generation (§12).
             $this->usageRecorder->record(
@@ -93,14 +109,11 @@ class GeminiReplyService implements BotReplyService
     }
 
     /**
-     * Integer micro-USD cost from token counts (§3 — no float for money).
-     * Prices are per 1,000,000 tokens, expressed in micro-USD in config.
+     * Integer micro-USD cost from token counts at the resolved per-Mtok prices
+     * (§3 — no float for money). Prices are per 1,000,000 tokens in micro-USD.
      */
-    private function costMicros(int $tokensIn, int $tokensOut): int
+    private function costMicros(int $tokensIn, int $tokensOut, int $inPerMtok, int $outPerMtok): int
     {
-        $inPerMtok = (int) config('services.gemini.input_micros_per_mtok', 100000);
-        $outPerMtok = (int) config('services.gemini.output_micros_per_mtok', 400000);
-
         return intdiv($tokensIn * $inPerMtok, 1_000_000)
             + intdiv($tokensOut * $outPerMtok, 1_000_000);
     }
@@ -123,31 +136,5 @@ class GeminiReplyService implements BotReplyService
             ->value('messages');
 
         return $used < $cap;
-    }
-
-    /**
-     * Tenant key first (encrypted), else the platform key. Never logged (§13).
-     */
-    private function resolveApiKey(WhatsappAccount $account): ?string
-    {
-        $tenantKey = $account->ai_api_key;
-
-        if (is_string($tenantKey) && $tenantKey !== '') {
-            return $tenantKey;
-        }
-
-        $platformKey = config('services.gemini.api_key');
-
-        return is_string($platformKey) && $platformKey !== '' ? $platformKey : null;
-    }
-
-    /**
-     * The approved model id (§12 — no silent model swap).
-     */
-    private function resolveModel(): string
-    {
-        $model = config('services.gemini.model');
-
-        return is_string($model) && $model !== '' ? $model : 'gemini-2.5-flash-lite';
     }
 }

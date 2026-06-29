@@ -7,8 +7,8 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\PlaygroundSendRequest;
 use App\Models\WhatsappAccount;
-use App\Services\AI\GeminiClient;
 use App\Services\AI\PromptBuilder;
+use App\Services\AI\ProviderResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
@@ -23,23 +23,26 @@ use Throwable;
  * round persists NOTHING. It never creates a Conversation or Message row and
  * never calls UsageRecorder, so trying the bot can never pollute real customer
  * data nor inflate the tenant's usage/billing counters (§3, §4). The Gemini call
- * is made directly via the low-level client, deliberately bypassing
- * GeminiReplyService (which would record usage).
+ * is made directly via the resolved provider client, deliberately bypassing
+ * AiReplyService (which would record usage).
  *
  * Isolation (§1): the account is resolved through the TenantScope global scope,
  * so the prompt is always built from the CURRENT tenant's own account — there is
  * no way to address another tenant's bot.
  *
  * Secrets (§13): the system prompt is never returned to the browser, and the API
- * key (tenant key or platform fallback) is never echoed, logged, or leaked in
- * the error path. On any Gemini failure we report($e) and return a polite JSON
- * error — no stack trace, no key, no crash.
+ * key (tenant key, platform setting, or .env fallback) is never echoed, logged,
+ * or leaked in the error path. On any provider failure we report($e) and return a
+ * polite JSON error — no stack trace, no key, no crash.
+ *
+ * Provider parity (§12): the playground tries the SAME provider/model/key the
+ * webhook would use for this account, resolved via {@see ProviderResolver}.
  */
 class PlaygroundController extends Controller
 {
     public function __construct(
         private readonly PromptBuilder $promptBuilder,
-        private readonly GeminiClient $client,
+        private readonly ProviderResolver $resolver,
     ) {}
 
     /**
@@ -101,7 +104,7 @@ class PlaygroundController extends Controller
         }
 
         // Per-tenant daily playground cap (§12, §14): the playground bypasses
-        // GeminiReplyService (so it records no usage), which also bypasses the
+        // AiReplyService (so it records no usage), which also bypasses the
         // production daily cap. Guard it independently so live testing can't
         // drain the platform key.
         $tenantId = (int) $request->user()?->tenant_id;
@@ -123,22 +126,25 @@ class PlaygroundController extends Controller
         // The untrusted message is the ONLY turn, framed strictly as `user`.
         $turns = [['role' => 'user', 'text' => $message]];
 
-        // Account temperature is an int 0..100; Gemini wants a float clamped to
-        // its supported 0.0..2.0 range (§12 — no out-of-range value).
+        // Account temperature is an int 0..100; providers want a float clamped to
+        // a sane 0.0..2.0 range (§12 — no out-of-range value).
         $temperature = max(0.0, min(2.0, (int) $account->temperature / 100));
 
+        // Same provider/model/key the webhook would use for this account (§12).
+        $resolved = $this->resolver->resolve($account);
+
         try {
-            $result = $this->client->generate(
+            $result = $resolved['provider']->generate(
                 systemInstruction: $systemInstruction,
                 turns: $turns,
                 temperature: $temperature,
-                apiKey: $this->resolveApiKey($account),
-                model: $this->resolveModel(),
+                apiKey: $resolved['apiKey'],
+                model: $resolved['model'],
             );
         } catch (Throwable $e) {
             // Explicit failure handling (§3): report, then a polite JSON error.
-            // The exception carries no key (GeminiClient strips it), and we do
-            // not echo its message to avoid surfacing internals (§13).
+            // The exception carries no key (the client strips it), and we do not
+            // echo its message to avoid surfacing internals (§13).
             report($e);
 
             return response()->json([
@@ -158,31 +164,5 @@ class PlaygroundController extends Controller
             'tokens_in' => $result['tokensIn'],
             'tokens_out' => $result['tokensOut'],
         ]);
-    }
-
-    /**
-     * Tenant key first (encrypted), else the platform key. Never logged (§13).
-     */
-    private function resolveApiKey(WhatsappAccount $account): ?string
-    {
-        $tenantKey = $account->ai_api_key;
-
-        if (is_string($tenantKey) && $tenantKey !== '') {
-            return $tenantKey;
-        }
-
-        $platformKey = config('services.gemini.api_key');
-
-        return is_string($platformKey) && $platformKey !== '' ? $platformKey : null;
-    }
-
-    /**
-     * The approved model id (§12 — no silent model swap).
-     */
-    private function resolveModel(): string
-    {
-        $model = config('services.gemini.model');
-
-        return is_string($model) && $model !== '' ? $model : 'gemini-2.5-flash-lite';
     }
 }
