@@ -6,12 +6,6 @@
         </div>
     </x-slot>
 
-    @php
-        $account = \App\Models\WhatsappAccount::query()->first();
-        $isConnected = $account && filled($account->phone_number_id) && filled($account->access_token);
-        $knowledgeCount = \App\Models\KnowledgeDocument::query()->count();
-    @endphp
-
     <div class="space-y-6">
         <!-- Status banner -->
         <div @class([
@@ -47,7 +41,23 @@
             @endunless
         </div>
 
-        <!-- Quick stats -->
+        <!-- Live usage stats (tenant-scoped, §1) -->
+        <div class="grid gap-4 sm:grid-cols-3">
+            <a href="{{ route('conversations.index') }}" class="rounded-2xl border border-ink/10 bg-white p-5 shadow-luxe transition hover:border-emerald/30">
+                <p class="font-mono text-[11px] uppercase tracking-wider text-ink-soft">رسائل اليوم</p>
+                <p class="mt-2 text-2xl font-bold text-ink tabular-nums">{{ number_format($messagesToday) }}</p>
+            </a>
+            <a href="{{ route('conversations.index') }}" class="rounded-2xl border border-ink/10 bg-white p-5 shadow-luxe transition hover:border-emerald/30">
+                <p class="font-mono text-[11px] uppercase tracking-wider text-ink-soft">محادثات نشطة</p>
+                <p class="mt-2 text-2xl font-bold text-ink tabular-nums">{{ number_format($activeConversations) }}</p>
+            </a>
+            <a href="{{ route('analytics.index') }}" class="rounded-2xl border border-ink/10 bg-white p-5 shadow-luxe transition hover:border-emerald/30">
+                <p class="font-mono text-[11px] uppercase tracking-wider text-ink-soft">تكلفة الشهر</p>
+                <p class="mt-2 text-2xl font-bold text-emerald"><x-cost :micros="$monthCostMicros" /></p>
+            </a>
+        </div>
+
+        <!-- Account info -->
         <div class="grid gap-4 sm:grid-cols-3">
             <div class="rounded-2xl border border-ink/10 bg-white p-5 shadow-luxe">
                 <p class="font-mono text-[11px] uppercase tracking-wider text-ink-soft">حالة الحساب</p>

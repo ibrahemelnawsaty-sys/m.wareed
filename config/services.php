@@ -70,6 +70,11 @@ return [
         // tenant reaches it, the bot replies with the neutral fallback instead
         // of calling (and billing) Gemini.
         'daily_message_cap' => (int) env('GEMINI_DAILY_MESSAGE_CAP', 0),
+
+        // Per-tenant daily cap for the bot playground (§12, §14). The playground
+        // is ephemeral and bypasses usage recording, so it needs its own bound
+        // to keep live testing from draining the platform key.
+        'playground_daily_cap' => (int) env('GEMINI_PLAYGROUND_DAILY_CAP', 200),
     ],
 
 ];

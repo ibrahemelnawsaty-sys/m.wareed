@@ -27,6 +27,10 @@ test('guests are redirected to login from every dashboard route', function (stri
     ['get', 'knowledge.index'],
     ['get', 'knowledge.create'],
     ['post', 'knowledge.store'],
+    ['get', 'conversations.index'],
+    ['get', 'analytics.index'],
+    ['get', 'playground.index'],
+    ['post', 'playground.send'],
 ]);
 
 test('an authenticated tenant owner can reach the dashboard', function () {
