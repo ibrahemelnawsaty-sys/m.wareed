@@ -7,7 +7,12 @@
     </x-slot>
 
     <div class="space-y-6">
-        <!-- Status banner -->
+        {{-- Account-status banner: the customer sees ONLY their own tenant's
+             state (pending / suspended / expired / active), never admin data
+             or another customer (§5, §10). --}}
+        <x-account-status-banner />
+
+        <!-- Connection banner -->
         <div @class([
             'flex flex-col gap-4 rounded-2xl border p-6 shadow-luxe sm:flex-row sm:items-center sm:justify-between',
             'border-signal/30 bg-signal/10' => $isConnected,

@@ -25,4 +25,24 @@ class TenantFactory extends Factory
             'status' => 'active',
         ];
     }
+
+    /**
+     * A tenant awaiting admin approval (the state a fresh signup lands in).
+     */
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * A tenant whose service has been suspended by an admin.
+     */
+    public function suspended(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'suspended',
+        ]);
+    }
 }

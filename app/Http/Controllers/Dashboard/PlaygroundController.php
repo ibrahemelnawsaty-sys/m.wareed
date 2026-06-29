@@ -47,6 +47,16 @@ class PlaygroundController extends Controller
      */
     public function index(): View|RedirectResponse
     {
+        // Activation gate (§9): the playground runs the live bot, so it honours
+        // the SAME rule as the webhook — a pending / suspended / expired tenant
+        // may not run it (it would drain the platform key). Send them to the
+        // dashboard, where the status banner explains their state (§10).
+        $tenant = auth()->user()?->tenant;
+
+        if ($tenant === null || ! $tenant->isActive()) {
+            return redirect()->route('dashboard');
+        }
+
         $account = WhatsappAccount::query()->first();
 
         // No bot provisioned yet — guide the user instead of a raw 404 (§10).
@@ -70,6 +80,18 @@ class PlaygroundController extends Controller
      */
     public function send(PlaygroundSendRequest $request): JsonResponse
     {
+        // Activation gate (§9): mirror WebhookController — a pending / suspended
+        // / expired tenant must NOT run the bot, not even in the playground,
+        // which would otherwise drain the platform Gemini key with no admin
+        // approval (closes review finding H1).
+        $tenant = $request->user()->tenant;
+
+        if ($tenant === null || ! $tenant->isActive()) {
+            return response()->json([
+                'message' => 'حسابك غير مُفعَّل بعد. فعِّل اشتراكك لتجربة البوت.',
+            ], 403);
+        }
+
         $account = WhatsappAccount::query()->first();
 
         if ($account === null) {

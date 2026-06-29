@@ -39,6 +39,11 @@ class RegisteredUserController extends Controller
      * owner user and a pending WhatsApp account, all inside one transaction so a
      * half-provisioned tenant can never exist (§1, ADR-02).
      *
+     * The tenant starts as 'pending' (NOT 'active'): a new signup must be
+     * approved by a super-admin before its bot may reply (§9). The owner is
+     * still auto-verified and logged in so they can reach the dashboard and see
+     * the «قيد المراجعة» state — they are never locked out, just not yet live.
+     *
      * @throws ValidationException
      */
     public function store(Request $request): RedirectResponse
@@ -56,7 +61,10 @@ class RegisteredUserController extends Controller
             $tenant = Tenant::create([
                 'name' => $validated['business_name'],
                 'plan' => 'free',
-                'status' => 'active',
+                // Awaiting super-admin approval; the bot stays silent until then
+                // (§9). subscription_ends_at is left null (no fillable, no value)
+                // and is set later by an admin via Tenant::setSubscriptionMonths.
+                'status' => 'pending',
             ]);
 
             // Bind the new tenant so BelongsToTenant auto-fills tenant_id on the

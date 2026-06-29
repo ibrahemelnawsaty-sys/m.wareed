@@ -90,6 +90,17 @@ class WebhookController extends Controller
             return $this->ack();
         }
 
+        // Bot activation gate (§9): a tenant that is pending / suspended / past
+        // its subscription end is NOT allowed a live bot. Skip all AI + send
+        // work and stay silent — but still ack Meta with 200 as usual so it
+        // does not retry. `tenant` has no TenantScope (it is not a tenant-owned
+        // model), so this load is safe before binding the context.
+        $tenant = $account->tenant;
+
+        if ($tenant === null || ! $tenant->isActive()) {
+            return $this->ack();
+        }
+
         // Bind the tenant for the duration of processing, and guarantee it is
         // cleared afterwards (run() restores the prior value in a finally) so
         // tenant state never leaks into a later unit of work in the same

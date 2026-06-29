@@ -40,7 +40,9 @@ test('registration provisions a tenant, owner user and one pending whatsapp acco
 
     $tenant = Tenant::query()->where('name', 'متجر وريد')->firstOrFail();
     expect($tenant->plan)->toBe('free');
-    expect($tenant->status)->toBe('active');
+    // New signups await super-admin approval (§9): pending, no subscription yet.
+    expect($tenant->status)->toBe('pending');
+    expect($tenant->subscription_ends_at)->toBeNull();
 
     $user = User::query()->withoutGlobalScopes()->where('email', 'owner@example.com')->firstOrFail();
     expect($user->tenant_id)->toBe($tenant->id);

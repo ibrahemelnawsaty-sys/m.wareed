@@ -12,6 +12,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property bool $is_admin
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     use BelongsToTenant;
@@ -21,6 +24,11 @@ class User extends Authenticatable implements MustVerifyEmail
 
     /**
      * The attributes that are mass assignable.
+     *
+     * SECURITY (§13): `is_admin` is deliberately ABSENT here. A super-admin is
+     * created only via the `wareed:make-admin` CLI command which sets the flag
+     * with forceFill(), never through User::create()/fill() with user input —
+     * including it would be a one-line privilege-escalation hole.
      *
      * @var list<string>
      */
@@ -52,6 +60,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Whether this user is a platform super-admin (crosses all tenants).
+     */
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
     }
 }

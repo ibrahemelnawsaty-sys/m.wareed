@@ -82,3 +82,16 @@ function provisionTenant(array $accountAttributes = []): User
 
     return $user;
 }
+
+/**
+ * A genuine platform super-admin: no tenant, with is_admin set via forceFill
+ * (never mass assignment, §13) — exactly how the make-admin command provisions
+ * one. Shared across the Admin feature tests.
+ */
+function makeAdmin(): User
+{
+    $admin = User::factory()->create(['tenant_id' => null]);
+    $admin->forceFill(['is_admin' => true])->save();
+
+    return $admin;
+}
