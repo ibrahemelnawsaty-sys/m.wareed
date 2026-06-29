@@ -30,6 +30,13 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Super-admins have no tenant and belong in the admin panel; sending
+        // them to the tenant dashboard would 403 via BindTenant. Tenant users
+        // continue to their own dashboard (honouring any intended URL).
+        if ($request->user()->is_admin) {
+            return redirect()->route('admin.dashboard');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

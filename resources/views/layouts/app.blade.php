@@ -28,8 +28,8 @@
 
             @include('layouts.navigation')
 
-            <!-- Main column -->
-            <div class="lg:pe-72">
+            <!-- Main column (sidebar sits at right-0 in RTL → pad the inline-start/right) -->
+            <div class="lg:ps-72">
                 <!-- Topbar -->
                 <header class="sticky top-0 z-20 border-b border-ink/10 bg-paper/80 backdrop-blur">
                     <div class="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
