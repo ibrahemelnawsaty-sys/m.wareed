@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SendCustomerMessageRequest;
 use App\Http\Requests\Admin\UpdateBotRequest;
 use App\Http\Requests\Admin\UpdateSubscriptionRequest;
+use App\Mail\CustomerNotification;
+use App\Models\CustomerMessage;
 use App\Models\Tenant;
 use App\Models\UsageCounter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 /**
@@ -90,6 +94,16 @@ class CustomerController extends Controller
             ->selectRaw('COALESCE(SUM(cost_micros),0) as cost_micros')
             ->first();
 
+        // Last 10 admin-to-customer messages for THIS tenant (newest first).
+        // CustomerMessage has no global scope (admin-owned audit log), so we
+        // filter by tenant_id explicitly; sentBy is eager-loaded for the list.
+        $sentMessages = CustomerMessage::query()
+            ->where('tenant_id', $customer->id)
+            ->with(['sentBy' => fn ($q) => $q->withoutGlobalScopes()])
+            ->latest()
+            ->limit(10)
+            ->get();
+
         return view('admin.customers.show', [
             'customer' => $customer,
             'owner' => $owner,
@@ -98,6 +112,7 @@ class CustomerController extends Controller
             'tokensTotal' => (int) ($totals->tokens_in ?? 0) + (int) ($totals->tokens_out ?? 0),
             'costMicros' => (int) ($totals->cost_micros ?? 0),
             'providers' => UpdateBotRequest::PROVIDERS,
+            'sentMessages' => $sentMessages,
         ]);
     }
 
@@ -152,6 +167,60 @@ class CustomerController extends Controller
         ])->save();
 
         return $this->backToCustomer($tenant, 'customer-bot-updated');
+    }
+
+    /**
+     * Send an email to the customer's owner and record it in the audit log (§13).
+     *
+     * Channel is 'email' only for now (WhatsApp-to-customer needs a separate
+     * platform number — out of scope). The send is wrapped: a mail failure is
+     * report()ed and surfaced as a gentle error (no silent swallow, no 500, §3),
+     * and the audit row is written only after the mail is dispatched.
+     */
+    public function sendMessage(SendCustomerMessageRequest $request, int $tenant): RedirectResponse
+    {
+        $customer = $this->resolveTenant($tenant);
+
+        // Owner's email (cross-tenant read; the admin has no bound context, §1).
+        // Prefer the 'owner' role, fall back to the oldest user on the tenant.
+        $owner = $customer->users()->withoutGlobalScopes()->where('role', 'owner')->first()
+            ?? $customer->users()->withoutGlobalScopes()->oldest()->first();
+
+        $email = $owner?->email;
+
+        if ($email === null || $email === '') {
+            // No address to reach — surface it loudly, never a 500 (§3).
+            return redirect()
+                ->route('admin.customers.show', $tenant)
+                ->withInput()
+                ->withErrors(['subject' => 'لا يوجد بريد إلكتروني لمالك هذا العميل لإرسال الرسالة إليه.']);
+        }
+
+        $subject = (string) $request->validated('subject');
+        $body = (string) $request->validated('body');
+
+        try {
+            Mail::to($email)->send(new CustomerNotification($subject, $body));
+        } catch (\Throwable $e) {
+            // Surface to error tracking, then a gentle message — no swallow (§3).
+            report($e);
+
+            return redirect()
+                ->route('admin.customers.show', $tenant)
+                ->withInput()
+                ->withErrors(['subject' => 'تعذّر إرسال البريد حالياً. تم تسجيل الخطأ، يرجى المحاولة لاحقاً.']);
+        }
+
+        // Audit the send only after the mail dispatched successfully.
+        CustomerMessage::create([
+            'tenant_id' => $customer->id,
+            'sent_by_user_id' => $request->user()?->id,
+            'channel' => 'email',
+            'subject' => $subject,
+            'body' => $body,
+        ]);
+
+        return $this->backToCustomer($tenant, 'customer-message-sent');
     }
 
     /**

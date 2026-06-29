@@ -103,6 +103,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/customers/{tenant}/bot', [AdminCustomerController::class, 'updateBot'])
         ->whereNumber('tenant')->name('customers.bot');
 
+    // Email a customer (their tenant owner) from the admin console; every send
+    // is recorded in the customer_messages audit log. Channel is 'email' only
+    // for now (Phase 4d-1); CSRF + FormRequest-validated.
+    Route::post('/customers/{tenant}/messages', [AdminCustomerController::class, 'sendMessage'])
+        ->whereNumber('tenant')->name('customers.messages.store');
+
     // Platform-wide analytics (all tenants).
     Route::get('/analytics', [AdminAnalyticsController::class, 'index'])->name('analytics.index');
 

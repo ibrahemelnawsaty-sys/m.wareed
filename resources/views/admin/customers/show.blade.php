@@ -227,5 +227,81 @@
                 </form>
             </x-card>
         @endif
+
+        <!-- Message the customer (email channel, §13). Body is escaped in the email. -->
+        <x-card title="مراسلة العميل" subtitle="أرسِل رسالة بريد إلكتروني لمالك حساب هذا العميل.">
+            <form method="POST" action="{{ route('admin.customers.messages.store', $customer->id) }}" class="space-y-5">
+                @csrf
+
+                <div>
+                    <x-input-label for="channel" :value="'القناة'" />
+                    <select
+                        id="channel"
+                        name="channel_display"
+                        disabled
+                        class="mt-1.5 block w-full rounded-xl border-ink/15 bg-paper/60 text-sm text-ink-soft shadow-sm sm:w-72"
+                    >
+                        <option value="email" selected>بريد إلكتروني</option>
+                        <option value="whatsapp" disabled>واتساب — قريباً</option>
+                    </select>
+                    <p class="mt-2 text-xs text-ink-soft">القناة المتاحة حالياً هي البريد الإلكتروني فقط. مراسلة واتساب تُضاف لاحقاً.</p>
+                </div>
+
+                <div>
+                    <x-input-label for="subject" :value="'الموضوع'" />
+                    <input
+                        id="subject"
+                        name="subject"
+                        type="text"
+                        value="{{ old('subject') }}"
+                        maxlength="200"
+                        required
+                        class="mt-1.5 block w-full rounded-xl border-ink/15 bg-white text-sm text-ink shadow-sm transition focus:border-emerald focus:ring-emerald/30"
+                    >
+                </div>
+
+                <div>
+                    <x-input-label for="body" :value="'نص الرسالة'" />
+                    <textarea
+                        id="body"
+                        name="body"
+                        rows="5"
+                        maxlength="5000"
+                        required
+                        class="mt-1.5 block w-full rounded-xl border-ink/15 bg-white text-sm text-ink shadow-sm transition focus:border-emerald focus:ring-emerald/30"
+                    >{{ old('body') }}</textarea>
+                    <p class="mt-2 text-xs text-ink-soft">حتى 5000 حرف. تُرسَل الرسالة إلى بريد المالك المسجّل.</p>
+                </div>
+
+                <div class="flex justify-end border-t border-ink/10 pt-5">
+                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald px-5 py-2.5 text-sm font-semibold text-white shadow-luxe transition hover:bg-emerald-deep">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                        إرسال الرسالة
+                    </button>
+                </div>
+            </form>
+        </x-card>
+
+        <!-- Sent message history for THIS customer (last 10, newest first) -->
+        <x-card title="الرسائل المُرسَلة" subtitle="آخر 10 رسائل أُرسِلت لهذا العميل.">
+            @if ($sentMessages->isEmpty())
+                <p class="py-4 text-center text-sm text-ink-soft">لم تُرسَل أي رسالة لهذا العميل بعد.</p>
+            @else
+                <ul class="divide-y divide-ink/10">
+                    @foreach ($sentMessages as $message)
+                        <li class="flex flex-wrap items-start justify-between gap-3 py-3.5">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center rounded-full border border-ink/10 bg-paper/60 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ink-soft">{{ $message->channel }}</span>
+                                    <p class="truncate text-sm font-semibold text-ink">{{ $message->subject }}</p>
+                                </div>
+                                <p class="mt-1 text-xs text-ink-soft">المُرسِل: {{ $message->sentBy?->name ?? '—' }}</p>
+                            </div>
+                            <span class="shrink-0 font-mono text-xs text-ink-2">{{ $message->created_at?->format('Y-m-d H:i') ?? '—' }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-card>
     </div>
 </x-admin-layout>
