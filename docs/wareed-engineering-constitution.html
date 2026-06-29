@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>دستور وريد الهندسي — منصة بوتات واتساب الذكية (m.wareed.vip)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF2F0;
+    --card:#FFFFFF;
+    --ink:#0B1F1A;
+    --ink-2:#33463F;
+    --ink-soft:#5E726A;
+    --line:rgba(11,31,26,.12);
+    --line-2:rgba(11,31,26,.07);
+    --emerald:#0E7C5C;
+    --emerald-deep:#0A5C44;
+    --signal:#16C892;
+    --gold:#B8862E;
+    --gold-soft:#C8973F;
+    --night:#072019;
+    --night-2:#0A2B22;
+    --night-line:rgba(120,210,180,.16);
+    --danger:#B5462F;
+    --danger-soft:#E9A88F;
+    --r:14px;
+    --maxw:1080px;
+    --mono:'IBM Plex Mono','IBM Plex Sans Arabic',monospace;
+    --ar:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--ar);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.78;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:26px}
+
+  /* ============ shared atoms ============ */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.18em;
+    font-weight:500;
+    color:var(--emerald);
+    text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:10px;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1.5px;background:var(--emerald);display:inline-block}
+  .eyebrow.on-night{color:var(--signal)}
+  .eyebrow.on-night::before{background:var(--signal)}
+
+  h2.sec-title{
+    font-size:clamp(24px,3.6vw,38px);
+    font-weight:700;
+    line-height:1.2;
+    letter-spacing:-.01em;
+    margin-bottom:16px;
+    color:var(--ink);
+  }
+  .sec-lead{
+    font-size:17.5px;
+    color:var(--ink-2);
+    max-width:64ch;
+    font-weight:400;
+  }
+  .sec-lead b{color:var(--ink);font-weight:600}
+  section{padding-block:clamp(54px,7.5vw,92px)}
+  .num-gold{font-family:var(--mono);color:var(--gold);font-weight:500}
+  code,.mono{font-family:var(--mono);direction:ltr;unicode-bidi:isolate}
+  .ic{stroke-width:1.7;fill:none;stroke:currentColor}
+
+  /* ============ HERO ============ */
+  .hero{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(22,200,146,.14), transparent 60%),
+      linear-gradient(170deg,var(--night) 0%, var(--night-2) 100%);
+    color:#EAF4EF;
+    position:relative;
+    overflow:hidden;
+    padding-block:clamp(64px,10vw,108px) clamp(56px,8vw,84px);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--night-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--night-line) 1px, transparent 1px);
+    background-size:56px 56px;
+    -webkit-mask-image:radial-gradient(900px 500px at 75% 0%, #000 30%, transparent 80%);
+    mask-image:radial-gradient(900px 500px at 75% 0%, #000 30%, transparent 80%);
+    opacity:.5;pointer-events:none;
+  }
+  .hero .wrap{position:relative;z-index:2}
+  .hero-tag{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;
+    color:var(--signal);text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:10px;margin-bottom:24px;
+    border:1px solid var(--night-line);border-radius:100px;padding:7px 16px;
+  }
+  .hero-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--signal);box-shadow:0 0 0 0 rgba(22,200,146,.5);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,200,146,.5)}70%{box-shadow:0 0 0 9px rgba(22,200,146,0)}100%{box-shadow:0 0 0 0 rgba(22,200,146,0)}}
+  .hero h1{
+    font-size:clamp(30px,5vw,54px);
+    font-weight:700;line-height:1.14;letter-spacing:-.015em;
+    max-width:20ch;margin-bottom:20px;
+  }
+  .hero h1 .accent{color:var(--signal)}
+  .hero-sub{
+    font-size:clamp(16px,2vw,19px);
+    color:#A9C4BA;max-width:62ch;font-weight:300;margin-bottom:36px;line-height:1.75;
+  }
+  .hero-sub b{color:#EAF4EF;font-weight:500}
+  .hero-meta{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    border:1px solid var(--night-line);border-radius:14px;overflow:hidden;background:var(--night-line);
+  }
+  .hmeta{background:linear-gradient(170deg,var(--night-2),var(--night));padding:18px 18px}
+  .hmeta .k{font-family:var(--mono);font-size:10.5px;color:#7FA496;letter-spacing:.06em;margin-bottom:7px;text-transform:uppercase}
+  .hmeta .v{font-size:14.5px;font-weight:600;color:#EAF4EF;line-height:1.4}
+  .hmeta .v a{color:var(--signal);text-decoration:none}
+  .hmeta .v .g{color:var(--signal)}
+
+  /* ============ binding statement ============ */
+  .binding{
+    margin-top:30px;background:rgba(22,200,146,.06);
+    border:1px solid var(--night-line);border-inline-start:3px solid var(--signal);
+    border-radius:0 12px 12px 0;padding:18px 22px;
+  }
+  .binding p{font-size:14.5px;color:#C8DED5;line-height:1.7;margin:0}
+  .binding b{color:#fff;font-weight:600}
+
+  /* ============ TOC ============ */
+  .toc-band{background:linear-gradient(180deg,#fff,#F6F9F7);border-bottom:1px solid var(--line-2)}
+  .toc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:34px}
+  .toc-item{
+    display:flex;gap:13px;align-items:baseline;background:var(--card);
+    border:1px solid var(--line);border-radius:11px;padding:14px 16px;
+    text-decoration:none;color:var(--ink);transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .toc-item:hover{transform:translateY(-2px);border-color:rgba(14,124,92,.35);box-shadow:0 12px 28px -22px rgba(11,31,26,.5)}
+  .toc-n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--emerald);flex:0 0 auto}
+  .toc-t{font-size:14px;font-weight:500;line-height:1.45}
+
+  /* ============ law article ============ */
+  .law{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    margin-bottom:18px;overflow:hidden;scroll-margin-top:18px;
+  }
+  .law-head{
+    display:flex;gap:16px;align-items:center;padding:20px 26px;
+    border-bottom:1px solid var(--line-2);flex-wrap:wrap;
+  }
+  .law-id{
+    font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.04em;
+    color:#fff;background:var(--emerald);padding:6px 12px;border-radius:7px;flex:0 0 auto;
+  }
+  .law-head h3{font-size:19px;font-weight:600;letter-spacing:-.01em;flex:1 1 240px;min-width:0;line-height:1.4}
+  .law-tag{
+    font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;
+    border:1px solid rgba(184,134,46,.35);background:rgba(184,134,46,.07);
+    padding:5px 12px;border-radius:100px;white-space:nowrap;
+  }
+  .law-body{padding:22px 26px 26px}
+  .law-body>p{font-size:15px;color:var(--ink-2);margin-bottom:14px}
+  .law-body>p:last-child{margin-bottom:0}
+  .law-body strong{color:var(--ink);font-weight:600}
+
+  /* rule list */
+  ul.rules{list-style:none;display:flex;flex-direction:column;gap:13px;margin:4px 0 0}
+  ul.rules li{font-size:14.5px;color:var(--ink-2);padding-inline-start:26px;position:relative;line-height:1.7}
+  ul.rules li::before{
+    content:"";position:absolute;right:5px;top:11px;width:7px;height:7px;border-radius:2px;
+    background:var(--emerald);transform:rotate(45deg);
+  }
+  ul.rules li b{color:var(--ink);font-weight:600}
+
+  /* numbered law list */
+  ol.rules{list-style:none;counter-reset:r;display:flex;flex-direction:column;gap:14px;margin:4px 0 0}
+  ol.rules li{font-size:14.5px;color:var(--ink-2);padding-inline-start:38px;position:relative;line-height:1.7;counter-increment:r}
+  ol.rules li::before{
+    content:counter(r);position:absolute;right:0;top:1px;width:26px;height:26px;border-radius:8px;
+    font-family:var(--mono);font-size:12px;font-weight:600;color:var(--emerald);
+    background:rgba(14,124,92,.08);border:1px solid rgba(14,124,92,.18);
+    display:grid;place-items:center;
+  }
+  ol.rules li b{color:var(--ink);font-weight:600}
+  ol.rules li .lead{font-weight:600;color:var(--ink)}
+
+  .why,.warn{border-radius:0 9px 9px 0;padding:14px 18px;margin-top:14px}
+  .why{background:#F5F8F6;border-inline-start:3px solid var(--emerald)}
+  .why .lbl{font-family:var(--mono);font-size:11px;color:var(--emerald);font-weight:600;letter-spacing:.08em;margin-bottom:5px}
+  .why p{font-size:14px;color:var(--ink-2);margin:0}
+  .warn{background:rgba(181,70,47,.05);border-inline-start:3px solid var(--danger)}
+  .warn .lbl{font-family:var(--mono);font-size:11px;color:var(--danger);font-weight:600;letter-spacing:.06em;margin-bottom:5px}
+  .warn p{font-size:14px;color:#7a3322;margin:0}
+
+  /* inline code */
+  code.k{background:rgba(14,124,92,.08);color:var(--emerald-deep);padding:2px 7px;border-radius:5px;font-size:12.5px;display:inline-block}
+  code.enc{background:rgba(184,134,46,.1);color:var(--gold);padding:2px 7px;border-radius:5px;font-size:12.5px;display:inline-block}
+
+  /* ============ spec table ============ */
+  .tbl-scroll{margin-top:34px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+  table.t{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+  table.t thead th{
+    background:#F5F8F6;text-align:right;font-family:var(--mono);font-size:11px;
+    font-weight:600;color:var(--ink-2);letter-spacing:.05em;padding:14px 20px;
+    border-bottom:1px solid var(--line);text-transform:uppercase;
+  }
+  table.t td{padding:14px 20px;border-bottom:1px solid var(--line-2);vertical-align:top;color:var(--ink-2)}
+  table.t tbody tr:last-child td{border-bottom:none}
+  table.t tbody tr:hover{background:#FAFCFB}
+  .t-key{font-weight:600;color:var(--ink);white-space:nowrap}
+  .t-mono{font-family:var(--mono);font-size:12px;color:var(--emerald);direction:ltr;text-align:right;line-height:1.7}
+  .t-mono .enc{color:var(--gold)}
+
+  /* ============ constants (ADRs) ============ */
+  .const-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:34px}
+  .const{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 22px}
+  .const .cid{font-family:var(--mono);font-size:11px;font-weight:600;color:#fff;background:var(--emerald-deep);padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:12px}
+  .const h4{font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em}
+  .const p{font-size:13.5px;color:var(--ink-soft);line-height:1.65}
+  .const p b{color:var(--emerald-deep);font-weight:600}
+
+  /* ============ dark band ============ */
+  .dark{background:var(--night);color:#E4F1EB}
+  .dark h2.sec-title{color:#fff}
+  .dark .sec-lead{color:#A9C4BA}
+  .dark .sec-lead b{color:#fff}
+  .dark .eyebrow{color:var(--signal)}
+  .dark .eyebrow::before{background:var(--signal)}
+  .ct-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:34px;background:var(--night-line);border:1px solid var(--night-line);border-radius:16px;overflow:hidden}
+  .ct{background:linear-gradient(170deg,var(--night-2),var(--night));padding:24px 22px}
+  .ct .tag{font-family:var(--mono);font-size:10px;color:var(--danger-soft);background:rgba(181,70,47,.16);border:1px solid rgba(181,70,47,.3);padding:4px 9px;border-radius:6px;letter-spacing:.04em;display:inline-block;margin-bottom:12px}
+  .ct h4{font-size:16px;font-weight:600;color:#fff;margin-bottom:10px;line-height:1.4}
+  .ct .sol{font-size:13.5px;color:#B6CEC4;line-height:1.7}
+  .ct .sol b{color:var(--signal);font-weight:600}
+  .ct code{font-family:var(--mono);font-size:12px;background:rgba(22,200,146,.1);color:#9FE6CC;padding:2px 7px;border-radius:5px;direction:ltr;display:inline-block}
+
+  /* ============ enforcement map ============ */
+  table.map{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+  table.map thead th{background:#F5F8F6;text-align:right;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);letter-spacing:.05em;padding:14px 20px;border-bottom:1px solid var(--line);text-transform:uppercase}
+  table.map td{padding:13px 20px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  table.map tbody tr:last-child td{border-bottom:none}
+  table.map .rule{color:var(--ink-2);font-weight:500}
+  table.map .guard{font-family:var(--mono);font-size:12px;color:var(--emerald);direction:ltr;text-align:right}
+
+  /* ============ code blocks ============ */
+  .std{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 26px;margin-bottom:16px}
+  .std h4{font-size:16.5px;font-weight:600;margin-bottom:6px;display:flex;gap:10px;align-items:center}
+  .std h4 .sn{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:600;background:rgba(184,134,46,.08);border:1px solid rgba(184,134,46,.2);padding:3px 9px;border-radius:6px}
+  .std>p{font-size:14px;color:var(--ink-soft);margin-bottom:16px}
+  pre.code{
+    direction:ltr;text-align:left;font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    background:#06150F;color:#CFE6DC;border-radius:12px;padding:18px 20px;overflow-x:auto;
+    border:1px solid rgba(120,210,180,.14);margin-bottom:12px;
+  }
+  pre.code:last-child{margin-bottom:0}
+  pre.code .c-bad{color:#E9A88F}
+  pre.code .c-good{color:#7FE3B8}
+  pre.code .c-com{color:#6E8C80}
+  pre.code .c-kw{color:#9FB7FF}
+  pre.code .c-str{color:#E8C98A}
+  .std .note{font-size:13px;color:var(--ink-soft);line-height:1.65;margin-top:6px}
+  .std .note b{color:var(--ink-2)}
+
+  /* ============ checklist ============ */
+  .checklist{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 28px}
+  .checklist h4{font-size:16px;font-weight:600;margin-bottom:16px}
+  .checklist ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .checklist li{font-size:14.5px;color:var(--ink-2);padding-inline-start:32px;position:relative;line-height:1.6}
+  .checklist li::before{content:"";position:absolute;right:0;top:2px;width:19px;height:19px;border-radius:5px;border:2px solid var(--emerald);background:rgba(14,124,92,.06)}
+  .checklist li::after{content:"✓";position:absolute;right:4px;top:1px;color:var(--emerald);font-size:12px;font-weight:700}
+  .checklist li b{color:var(--ink)}
+
+  /* ============ env appendix ============ */
+  .env-note{background:rgba(184,134,46,.06);border:1px solid rgba(184,134,46,.25);border-inline-start:3px solid var(--gold);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:16px}
+  .env-note .lbl{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:600;letter-spacing:.06em;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+  .env-note p{font-size:14px;color:#7a5a1e;margin:0;line-height:1.7}
+  .env-note p b{color:#5c4316}
+
+  /* ============ footer ============ */
+  .footer{background:var(--night);color:#9FBBB0;padding-block:54px 46px}
+  .footer .wrap{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap}
+  .footer h3{color:#fff;font-size:21px;font-weight:600;margin-bottom:10px;letter-spacing:-.01em}
+  .footer p{font-size:14px;max-width:54ch;line-height:1.7}
+  .footer .meta{font-family:var(--mono);font-size:11px;color:#6E8C80;letter-spacing:.05em;text-align:start}
+  .footer .meta div{margin-bottom:5px}
+  .seal{display:inline-flex;align-items:center;gap:9px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--signal);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--night-line);border-radius:100px;padding:6px 14px}
+
+  /* ============ responsive ============ */
+  @media (max-width:900px){
+    .hero-meta{grid-template-columns:repeat(2,1fr)}
+    .toc-grid{grid-template-columns:1fr 1fr}
+    .const-grid,.ct-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){
+    .hero-meta,.toc-grid{grid-template-columns:1fr}
+    table.t,table.map{font-size:13px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+  /* ============ print ============ */
+  @media print{
+    body{background:#fff}
+    .hero,.dark,.footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .toc-band{display:none}
+    section{padding-block:26px;break-inside:avoid}
+    .law,.std,.const,.checklist{break-inside:avoid}
+    pre.code{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    a{color:inherit;text-decoration:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="wrap">
+    <span class="hero-tag"><span class="dot"></span>الدستور الهندسي · وثيقة سياسات مُلزِمة · الإصدار 1.0</span>
+    <h1>دستور <span class="accent">وريد</span> الهندسي — منصة بوتات واتساب الذكية</h1>
+    <p class="hero-sub">
+      الوثيقة الحاكمة التي تعمل بها فِرَق <b>وريد</b> على منصة <b>m.wareed.vip</b>: نظام
+      <b>SaaS متعدد المستأجرين</b> على Laravel، يربط كل عميل برقم واتساب خاص ويرد آلياً عبر Gemini Flash-Lite،
+      مُصمَّم ليعمل بانضباط صارم على <b>استضافة Hostinger المشتركة</b>. هذه القواعد ليست توصيات — كل قاعدة
+      قابلة للإنفاذ الآلي، وأي PR يكسرها يُرفض.
+    </p>
+
+    <div class="hero-meta">
+      <div class="hmeta"><div class="k">المنصة</div><div class="v"><a href="https://m.wareed.vip/" target="_blank" rel="noopener">m.wareed.vip</a></div></div>
+      <div class="hmeta"><div class="k">الإصدار</div><div class="v"><span class="g">v1.0</span> · 29 يونيو 2026</div></div>
+      <div class="hmeta"><div class="k">الحالة</div><div class="v">مُلزِمة · بشراً ووكلاء AI</div></div>
+      <div class="hmeta"><div class="k">الاعتماد</div><div class="v">إدارة الهندسة · <span class="g">CTO</span></div></div>
+    </div>
+
+    <div class="binding">
+      <p>
+        <b>إلزام:</b> تنطبق هذه الوثيقة على كل مَن يكتب أو يدمج كوداً في هذا المستودع — بشراً كانوا أو وكلاء ذكاء اصطناعي.
+        بُنيت قواعدها بشكل استباقي على دروس مستفادة من حوادث تراجع برمجي (Regression) حقيقية في مشاريع شقيقة،
+        حيث تسبّبت تغييرات مبنية على رؤية جزئية في انهيار أجزاء حيوية (فقدان بيانات، توقّف الردود أمام العميل النهائي).
+        هدفها تحويل حماية النظام من «الاعتماد على الذاكرة البشرية» إلى <b>قيود آلية صارمة وممنهجة</b>. أي تعديل عليها يحتاج موافقة CTO.
+      </p>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== TOC ===================== -->
+<section class="toc-band">
+  <div class="wrap">
+    <span class="eyebrow">فهرس المواد</span>
+    <h2 class="sec-title">بنية الدستور</h2>
+    <p class="sec-lead">أربع عشرة مادة مُلزِمة، تليها خريطة الإنفاذ الآلي، ومعايير الكود التفصيلية، وحوكمة الدمج، وملحق إعداد البيئة.</p>
+    <div class="toc-grid">
+      <a class="toc-item" href="#s0"><span class="toc-n">§0</span><span class="toc-t">الهوية والنطاق</span></a>
+      <a class="toc-item" href="#s1"><span class="toc-n">§1</span><span class="toc-t">المسارات الحسّاسة</span></a>
+      <a class="toc-item" href="#constants"><span class="toc-n">★</span><span class="toc-t">الثوابت المعمارية</span></a>
+      <a class="toc-item" href="#s2"><span class="toc-n">§2</span><span class="toc-t">الحُرّاس الآلية (CI/CD)</span></a>
+      <a class="toc-item" href="#s3"><span class="toc-n">§3</span><span class="toc-t">سياسة قواعد البيانات والحالة</span></a>
+      <a class="toc-item" href="#s4"><span class="toc-n">§4</span><span class="toc-t">فحص دائرة التأثير</span></a>
+      <a class="toc-item" href="#s5"><span class="toc-n">§5</span><span class="toc-t">المراجعة وتجربة المستخدم</span></a>
+      <a class="toc-item" href="#s6"><span class="toc-n">§6</span><span class="toc-t">بيئة آمنة للمطوّرين</span></a>
+      <a class="toc-item" href="#s7"><span class="toc-n">§7</span><span class="toc-t">النسخ الاحتياطي والاستعادة</span></a>
+      <a class="toc-item" href="#s8"><span class="toc-n">§8</span><span class="toc-t">بوابة الهجرات</span></a>
+      <a class="toc-item" href="#s9"><span class="toc-n">§9</span><span class="toc-t">البصيرة المعمارية</span></a>
+      <a class="toc-item" href="#s10"><span class="toc-n">§10</span><span class="toc-t">اكتمال الميزة</span></a>
+      <a class="toc-item" href="#s11"><span class="toc-n">§11</span><span class="toc-t">حوكمة منصة واتساب</span></a>
+      <a class="toc-item" href="#s12"><span class="toc-n">§12</span><span class="toc-t">حوكمة الذكاء الاصطناعي</span></a>
+      <a class="toc-item" href="#s13"><span class="toc-n">§13</span><span class="toc-t">أمن المنصة</span></a>
+      <a class="toc-item" href="#s14"><span class="toc-n">§14</span><span class="toc-t">انضباط الاستضافة المشتركة</span></a>
+      <a class="toc-item" href="#enforce"><span class="toc-n">⊞</span><span class="toc-t">خريطة الإنفاذ الآلي</span></a>
+      <a class="toc-item" href="#standards"><span class="toc-n">{ }</span><span class="toc-t">معايير الهندسة (كود)</span></a>
+      <a class="toc-item" href="#merge"><span class="toc-n">⑂</span><span class="toc-t">حوكمة الدمج</span></a>
+      <a class="toc-item" href="#env"><span class="toc-n">.env</span><span class="toc-t">ملحق البيئة وقاعدة البيانات</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §0 IDENTITY ===================== -->
+<section id="s0">
+  <div class="wrap">
+    <span class="eyebrow">المادة صفر</span>
+    <h2 class="sec-title">§0 — الهوية والنطاق: ما هي هذه المنصة</h2>
+    <p class="sec-lead">
+      <b>وريد لبوتات واتساب</b> منصة SaaS تبيعها الشركة لعملائها (B2B). كل عميل يحصل على حساب مستأجر مستقل،
+      يربط رقم واتساب الخاص به، يضيف قاعدة معرفته، ويحصل على بوت ذكي يرد على عملائه تلقائياً — وكل شيء يُدار
+      عبر API موحّد يخدم لوحة التحكم والتطبيقات مستقبلاً. القيد الحاكم لكل قرار: <b>الخفّة والسرعة على استضافة مشتركة</b>.
+    </p>
+
+    <div class="tbl-scroll">
+      <table class="t">
+        <thead><tr><th>البُعد</th><th>القرار المُثبَّت</th></tr></thead>
+        <tbody>
+          <tr><td class="t-key">النطاق (Domain)</td><td><span class="t-mono">https://m.wareed.vip/</span> — الإنتاج الوحيد القابل للأرشفة. أي بيئة أخرى (staging/local) خارج هذا النطاق.</td></tr>
+          <tr><td class="t-key">إطار العمل</td><td><span class="t-mono">Laravel 12 · PHP 8.3+</span> مع OPcache، و <span class="t-mono">config/route/view:cache</span> في الإنتاج.</td></tr>
+          <tr><td class="t-key">قاعدة البيانات</td><td><span class="t-mono">MySQL 8</span> — قاعدة واحدة <span class="t-mono">u828479444_M</span> على Hostinger، عزل المستأجرين عبر <span class="t-mono">tenant_id</span>.</td></tr>
+          <tr><td class="t-key">البنية</td><td>متعدد المستأجرين (Multi-tenant) بقاعدة واحدة + <span class="t-mono">Global Scope</span> مفروض.</td></tr>
+          <tr><td class="t-key">تكامل واتساب</td><td><span class="t-mono">WhatsApp Cloud API</span> الرسمي من Meta (Webhook + HTTP فقط) — لا مكتبات غير رسمية.</td></tr>
+          <tr><td class="t-key">نموذج الذكاء</td><td><span class="t-mono">Gemini 2.5 Flash-Lite</span> عبر Laravel HTTP — رد متزامن داخل الـ webhook.</td></tr>
+          <tr><td class="t-key">الاستضافة</td><td>Hostinger مشتركة — <b>لا عمليات خلفية دائمة</b>، لا Redis/Supervisor/WebSockets.</td></tr>
+          <tr><td class="t-key">المصادقة / API</td><td><span class="t-mono">Laravel Sanctum</span> — API-first، لوحة Blade + Alpine.js + Tailwind.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="law" style="margin-top:24px">
+      <div class="law-head"><span class="law-id">ركائز</span><h3>ما يجب أن تضمنه المنصة دائماً</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>عزل تام بين المستأجرين:</b> لا يرى عميل بيانات عميل آخر، ولا يصل رقم واتساب لمستأجر إلى محادثات مستأجر آخر — مسؤولية أمنية قصوى.</li>
+          <li><b>ربط رقم العميل الخاص:</b> يربط كل عميل رقمه عبر Embedded Signup تحت تطبيق Tech Provider الخاص بنا، ويُرسل الرد باسم رقم العميل نفسه — لا أرقام مشتركة.</li>
+          <li><b>لوحة تحكم لكل عميل:</b> إدارة البوت، الـ system prompt، المعرفة، المحادثات، والاستهلاك — دون لمس الكود.</li>
+          <li><b>تكلفة محكومة:</b> ردود واتساب داخل نافذة الخدمة (24 ساعة) مجانية، وتكلفة Gemini محسوبة ومُراقَبة لكل مستأجر.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §1 SENSITIVE PATHS ===================== -->
+<section id="s1" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة الأولى</span>
+    <h2 class="sec-title">§1 — نطاق «المسارات الحسّاسة» (تعريف مُلزِم)</h2>
+    <p class="sec-lead">القواعد المشدّدة في هذه الوثيقة تنطبق على أي كود يقرأ أو يكتب الجداول/المكوّنات التالية. تجاوزها على هذه المسارات حادثة، لا مجرد خطأ.</p>
+
+    <div class="tbl-scroll">
+      <table class="t">
+        <thead><tr><th>المجال</th><th>الجداول / المكوّنات</th></tr></thead>
+        <tbody>
+          <tr><td class="t-key">تعدد المستأجرين<br>(Tenancy)</td><td class="t-mono">tenants · users · tenant_id على كل جدول · BelongsToTenant · TenantScope</td></tr>
+          <tr><td class="t-key">ربط واتساب<br>(الأخطر)</td><td class="t-mono">whatsapp_accounts · phone_number_id · waba_id · <span class="enc">access_token</span> · <span class="enc">ai_api_key</span> · system_prompt</td></tr>
+          <tr><td class="t-key">المحادثات والرسائل</td><td class="t-mono">conversations · messages · <span class="enc">wa_message_id</span> · window_expires_at · direction</td></tr>
+          <tr><td class="t-key">قاعدة المعرفة</td><td class="t-mono">knowledge_documents · knowledge_chunks · embedding</td></tr>
+          <tr><td class="t-key">الاستهلاك والفوترة</td><td class="t-mono">usage_counters · subscriptions · subscription_plans · tokens_in · tokens_out · cost</td></tr>
+          <tr><td class="t-key">الهوية والصلاحيات</td><td class="t-mono">users · roles · permissions · password_resets · جلسات الأدمن · Sanctum tokens</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warn" style="max-width:none;margin-top:24px">
+      <div class="lbl">الأخطر على الإطلاق</div>
+      <p>عزل المستأجرين أخطر من المالية: تسريب محادثات أو مفاتيح عميل إلى عميل آخر حادثة أمنية حرجة. وبدرجة موازية: تسريب <code class="mono">access_token</code> أو <code class="mono">ai_api_key</code> لأي مستأجر يعني اختراق رقم واتساب العميل وفاتورته. كل استعلام على بيانات مستأجر يجب أن يمرّ عبر <code class="mono">Global Scope</code> مفروض، وكل سرٍّ يجب أن يكون مشفّراً في القاعدة — لا اعتماد على تذكّر المطوّر.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ARCHITECTURAL CONSTANTS ===================== -->
+<section id="constants">
+  <div class="wrap">
+    <span class="eyebrow">الثوابت الحاكمة</span>
+    <h2 class="sec-title">★ — القرارات المعمارية التي لا تُكسر</h2>
+    <p class="sec-lead">أربعة قرارات هي ما يجعل المنصة قابلة للتشغيل فعلياً على استضافة مشتركة. لا يجوز كسرها إلا بـ ADR جديد مُعتمَد من CTO يوثّق البديل وأثره.</p>
+
+    <div class="const-grid">
+      <div class="const">
+        <span class="cid">ثابت ADR-01</span>
+        <h4>واتساب عبر Cloud API الرسمي فقط</h4>
+        <p>المكتبات غير الرسمية (Baileys / whatsapp-web.js) تتطلب عملية Node دائمة لكل رقم وتُعرّض الأرقام للحظر — <b>ممنوعة منعاً باتاً</b>. التكامل عبر Webhook + HTTP فقط، وMeta تستضيف الاتصال. يُحدَّد المستأجر من <code class="mono" style="color:var(--emerald)">phone_number_id</code>.</p>
+      </div>
+      <div class="const">
+        <span class="cid">ثابت ADR-02</span>
+        <h4>قاعدة بيانات واحدة + tenant_id</h4>
+        <p>«قاعدة لكل عميل» ثقيلة على Hostinger وممنوعة. العزل عبر عمود <code class="mono" style="color:var(--emerald)">tenant_id</code> في كل جدول + <b>Global Scope مفروض</b> على كل Model، تحرسه اختبارات اختراق العزل.</p>
+      </div>
+      <div class="const">
+        <span class="cid">ثابت ADR-03</span>
+        <h4>رد متزامن — بلا Queue Workers دائمة</h4>
+        <p>ممنوع الاعتماد على <code class="mono" style="color:var(--emerald)">queue:work</code> دائم. الرد يُنفَّذ <b>متزامناً داخل الـ webhook</b> (Flash-Lite سريع 1–3 ثوانٍ)، والمهام الثقيلة فقط تُدفع لطابور <code class="mono" style="color:var(--emerald)">database</code> يُشغّله Cron كل دقيقة.</p>
+      </div>
+      <div class="const">
+        <span class="cid">ثابت ADR-04</span>
+        <h4>المعرفة: الحقن في السياق أولاً</h4>
+        <p>نبدأ بحقن معرفة العميل في الـ system prompt (Flash-Lite يدعم سياقاً ضخماً)، بلا قاعدة متجهات. يُفعَّل <b>RAG</b> فقط عند نمو المعرفة فعلياً — لا تعقيد قبل الحاجة.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §2 GUARDS ===================== -->
+<section id="s2" style="background:linear-gradient(180deg,#F6F9F7,#fff);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة الثانية</span>
+    <h2 class="sec-title">§2 — قانون الحُرّاس الآلية (Tests &amp; CI/CD)</h2>
+    <p class="sec-lead">حماية النظام واجب آلي لا بشري. كل قاعدة هنا يحرسها فحص في CI، وأي PR يفشل لا يُدمج ولا يُراجع حتى يخضرّ بالكامل.</p>
+
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§2</span><h3>الحُرّاس الإلزامية</h3><span class="law-tag">enforceable in CI</span></div>
+      <div class="law-body">
+        <ol class="rules">
+          <li><span class="lead">اختبار إجباري على المسارات الحسّاسة:</span> يُمنع دمج أي كود يمسّ مساراً حسّاساً (§1) دون اختبار Pest/PHPUnit على قاعدة حقيقية يثبت صحة العملية وتعامُلها مع الحالات الشاذة (Feature/Integration).</li>
+          <li><span class="lead">الإصلاح الموجَّه بالاختبار:</span> أي bug إنتاجي ← يُكتب أولاً اختبار يفشل بسببه، ثم كود الإصلاح ليجتازه. لا إصلاح بلا حارس يمنع تكراره.</li>
+          <li><span class="lead">اختبار عزل المستأجرين إلزامي:</span> كل ميزة تمسّ بيانات المستأجرين يصاحبها اختبار يثبت أن مستأجراً لا يرى/يعدّل بيانات مستأجر آخر، ولا يصل لرسائله أو مفاتيحه.</li>
+          <li><span class="lead">اختبار الـ webhook إلزامي:</span> كل تغيير في مسار استقبال واتساب يصاحبه اختبار يثبت (أ) رفض التوقيع غير الصحيح، (ب) تجاهل الرسالة المكرّرة (idempotency على <code class="mono">wa_message_id</code>)، (ج) توجيه الرسالة للمستأجر الصحيح.</li>
+          <li><span class="lead">بوابة الجودة في CI:</span> كل PR يمرّ عبر <code class="k">Pint</code> (تنسيق) + <code class="k">Larastan/PHPStan</code> (تحليل ساكن، المستوى المعتمد كحدّ أدنى) + كل الاختبارات.</li>
+          <li><span class="lead">الرفض الآلي:</span> ممنوع <code class="k">--no-verify</code> أو تجاوز الفحوص بأي شكل. الحُرّاس لا تُطفأ.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §3 DB POLICY ===================== -->
+<section id="s3">
+  <div class="wrap">
+    <span class="eyebrow">المادة الثالثة</span>
+    <h2 class="sec-title">§3 — سياسة قواعد البيانات وإدارة الحالة</h2>
+    <p class="sec-lead">معظم حوادث فقدان البيانات تنبع من هنا: ابتلاع صامت لخطأ، أو مزامنة تمحو ما لم يُرسَل. هذه القواعد تُغلق تلك الأبواب.</p>
+
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§3</span><h3>القواعد الصارمة لحالة البيانات</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>منع الابتلاع الصامت:</b> أي فشل في عملية حرجة (استدعاء Gemini، إرسال واتساب، كتابة رسالة) يجب أن يظهر: <code class="k">throw</code> أو <code class="k">report($e)</code> أو إرجاع خطأ صريح. ممنوع <code class="k">Log::error()</code> ثم مواصلة التنفيذ. <code class="k">try/catch</code> فارغ ممنوع إلا بتعليق يبرّر لماذا الفشل مقبول.</li>
+          <li><b>المزامنة غير المدمّرة:</b> ممنوع نمط «احذف الكل ثم أدرج» الذي يقبل مصفوفة فارغة لمحو بيانات. المصفوفة الفارغة من الواجهة تعني «لا تغيير» — لا «احذف كل المعرفة/الإعدادات». استخدم <code class="k">Diff</code> أو <code class="k">upsert</code> موجّه.</li>
+          <li><b>عزل المستأجرين بالبنية:</b> كل Model مرتبط بمستأجر يطبّق <code class="k">Global Scope</code> على <code class="mono">tenant_id</code>. ممنوع استعلام خام على جداول المستأجرين دون فلتر المستأجر.</li>
+          <li><b>عدم تكرار معالجة الـ webhook (Idempotency):</b> Meta قد تعيد إرسال الرسالة. يُخزَّن <code class="mono">wa_message_id</code> كمفتاح فريد، وتُتجاهل الرسالة المكرّرة فوراً قبل أي معالجة أو استدعاء AI — منعاً لردود مكررة وتكلفة مزدوجة.</li>
+          <li><b>الأسرار مشفّرة دائماً:</b> <code class="enc">access_token</code> و <code class="enc">ai_api_key</code> وأي توكن واتساب تُخزَّن عبر <code class="k">encrypted</code> cast — ممنوع تخزين أي سرٍّ بنص صريح في القاعدة إطلاقاً.</li>
+          <li><b>الاستهلاك بأعداد صحيحة:</b> <code class="mono">tokens_in/tokens_out</code> أعداد صحيحة، والتكلفة بأصغر وحدة نقدية (integer/decimal) — ممنوع <code class="k">float</code> للمال. حسابات الفوترة مُختبَرة، لا حساب عائم متناثر في الواجهة.</li>
+          <li><b>سلامة الـ Snapshot:</b> سجلات الفوترة المرتبطة بمرجع قابل للتغيير (باقة، سعر) تخزّن أعمدة لقطة وقت العملية، وتُقرأ منها — لا JOIN حيّ. المفاتيح الأجنبية القابلة للحذف تستخدم <code class="k">nullOnDelete()</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §4 IMPACT ===================== -->
+<section id="s4" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة الرابعة</span>
+    <h2 class="sec-title">§4 — بروتوكول فحص دائرة التأثير</h2>
+    <p class="sec-lead">القنابل الدفينة تنفجر بتغيّرات بعيدة عنها. التغيير الجزئي بلا فحص دائرة التأثير هو السبب الجذري الأول للحوادث.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§4</span><h3>قبل تعديل أي سلوك مشترك</h3><span class="law-tag">PR template</span></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li>قبل حذف أو تعديل سلوك أي <b>Service / Controller / Route / Job / Migration / مكوّن مشترك</b>: بحث شامل في كامل المشروع عن كل المستدعين والشاشات المرتبطة، وتوثيق النتيجة في وصف الـ PR (يفرضه قالب الـ PR).</li>
+          <li><b>قاعدة «الأداء مقابل السلامة»:</b> عند تحسين الأداء (تقليص الحمولة، Pagination، Lazy loading، تأجيل التحميل)، تأكَّد أن كود الحفظ يفهم أن «البيانات غير المُرسَلة من الواجهة» لا تعني «بيانات تُمسح من القاعدة».</li>
+          <li><b>الدرس المؤسِّس:</b> خلل في مسار رسالة واحدة قد يفجّر آلية تسجيل المحادثة أو عدّاد الاستهلاك في مكان آخر رغم أن كلاً منهما يبدو سليماً على حدة — لذلك يُوثَّق أثر كل تغيير على مسار الرسالة الحرج كاملاً.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §5 REVIEW & UX ===================== -->
+<section id="s5">
+  <div class="wrap">
+    <span class="eyebrow">المادة الخامسة</span>
+    <h2 class="sec-title">§5 — معايير المراجعة وتجربة المستخدم النهائية</h2>
+    <p class="sec-lead">الفحص في قاعدة البيانات وحده لا يكفي. الفيصل هو المخرج النهائي كما يراه العميل.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§5</span><h3>المخرج النهائي هو معيار القبول</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>اختبار الرسالة الحيّة:</b> لا تكتمل مهمة تمسّ مسار الرد بمجرد التأكد من الحفظ في الجداول — يجب إرسال رسالة واتساب فعلية والتأكد من وصول الرد الصحيح للعميل النهائي داخل النافذة، وظهور المحادثة في اللوحة.</li>
+          <li><b>معيار الفخامة والتجربة:</b> كل صفحة في اللوحة تُسلَّم تطابق نظام التصميم المعتمد (RTL سليم، تباعد، حركة ناعمة، تجاوب كامل على الموبايل) — الواجهة الفاخرة شرط قبول، لا تحسين لاحق.</li>
+          <li><b>المراجعة الثنائية:</b> التعديلات الحسّاسة (§1) تُدمج بمراجعة طرف ثانٍ + <code class="k">/code-review</code> كمراجع آلي. ما يلمس المال أو الـ Auth أو عزل المستأجرين أو ربط واتساب: لا دمج بلا مراجعة بشرية إضافية.</li>
+          <li><b>فحص نظام تتبّع الأخطاء</b> (Sentry/Flare/Bugsnag + Telescope في غير الإنتاج) بعد كل نشر وعند كل بلاغ خلل — بلا استثناء.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §6 ONBOARDING ===================== -->
+<section id="s6" style="background:linear-gradient(180deg,#F6F9F7,#fff);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة السادسة</span>
+    <h2 class="sec-title">§6 — بيئة آمنة للمطوّرين الجدد</h2>
+    <p class="sec-lead">حماية الإنتاج تبدأ من اليوم الأول لأي مطوّر جديد.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§6</span><h3>عزل الإنتاج والأسرار</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>عزل الإنتاج:</b> لا يُمنح مطوّر جديد وصولاً مباشراً لقاعدة الإنتاج <code class="mono">u828479444_M</code> أو لتوكنات واتساب أو مفاتيح Gemini. أسرار الإنتاج تبقى في <code class="k">.env</code> الإنتاج / أسرار CI حصراً — لا تُوزَّع على أجهزة محلية ولا تُكتب في الكود.</li>
+          <li><b>بيئة Staging معزولة:</b> عمل الجدد محصور في فروع منفصلة مرتبطة ببيئة اختبار، والدمج حصراً عبر مسار CI/CD بعد اجتياز كل الحُرّاس.</li>
+          <li><b>بيانات تطوير مُولَّدة:</b> التطوير المحلي يستخدم Seeders/Factories ومفاتيح Gemini تجريبية ورقم واتساب اختبار — لا نسخة من بيانات/أرقام/محادثات الإنتاج الحقيقية.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §7 BACKUP ===================== -->
+<section id="s7">
+  <div class="wrap">
+    <span class="eyebrow">المادة السابعة</span>
+    <h2 class="sec-title">§7 — سياسة النسخ الاحتياطي والاستعادة</h2>
+    <p class="sec-lead">خطة الاستعادة لا تُفترض — تُختبر.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§7</span><h3>النسخ والاستعادة المنضبطة</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>نسخ مجدولة موثَّقة:</b> نسخ يومية لقاعدة <code class="mono">u828479444_M</code> (عبر أداة نسخ Hostinger أو <code class="k">spatie/laravel-backup</code> إلى تخزين خارجي) مع سياسة احتفاظ واضحة، تُختبر استعادتها دورياً.</li>
+          <li><b>قبل أي تغيير يمسّ بيانات حسّاسة:</b> أخذ لقطة يدوية مستهدفة للجداول الحرجة («نقطة استعادة عند الطلب») قبل التنفيذ.</li>
+          <li><b>ممنوع الاستعادة فوق الإنتاج مباشرة:</b> الاستعادة تتم إلى بيئة منفصلة ثم النقل المدروس. النسخ المؤقتة تُحذف فور انتهاء الغرض.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §8 MIGRATIONS ===================== -->
+<section id="s8" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة الثامنة</span>
+    <h2 class="sec-title">§8 — بوابة الهجرات (Smart Migration Gate)</h2>
+    <p class="sec-lead">الأتمتة العمياء قنبلة موقوتة، والاعتماد الدائم على التدخّل البشري عنق زجاجة. يؤتمت الآمن، ويوقَف الخطِر لمراجعة بشرية صريحة.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§8</span><h3>كل تغيير في المخطط عبر Migration</h3></div>
+      <div class="law-body">
+        <p>أي تغيير في مخطط القاعدة يتم حصراً عبر ملف Migration يمرّ عبر CI ثم النشر — <strong>ممنوع SQL يدوي على الإنتاج لتغيير المخطط</strong> عبر phpMyAdmin أو غيره.</p>
+        <ul class="rules">
+          <li><b>هجرات آمنة (تؤتمت):</b> <code class="mono">create table · add column · create index · GRANT</code> — لا تفقد بيانات، عكسها سهل.</li>
+          <li><b>هجرات خطِرة (توقَف لمراجعة):</b> <code class="mono">drop table/column · truncate · تغيير نوع عمود · not null</code> على عمود قد يحوي null — قد تُفقد بيانات أو يُكسر التطبيق.</li>
+          <li><b>إصلاحات البيانات على الإنتاج تتطلب:</b> عرض السكربت على طرف ثانٍ، موافقة صريحة، صياغة <code class="k">Idempotent</code> (updateOrInsert/upsert)، وتحقّقاً بعد التنفيذ.</li>
+          <li>كل Migration يملك <code class="k">down()</code> صحيحة قابلة للتراجع، أو توثيقاً صريحاً لسبب عدم قابلية التراجع.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §9 INSIGHT ===================== -->
+<section id="s9">
+  <div class="wrap">
+    <span class="eyebrow">المادة التاسعة</span>
+    <h2 class="sec-title">§9 — استراتيجية البصيرة المعمارية</h2>
+    <p class="sec-lead">أداة مرحلة التصميم إلزامية قبل كتابة أي سطر لميزة جوهرية أو تعديل على مسار حسّاس (§1). يوثّق المهندس القواعد الخمس داخل التصميم قبل عرضه للاعتماد (تناسبية: لمحة خفيفة تكفي للتغييرات البسيطة).</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§9</span><h3>القواعد الخمس قبل الكود</h3></div>
+      <div class="law-body">
+        <ol class="rules">
+          <li><span class="lead">محامي الشيطان:</span> أسوأ السيناريوهات الكارثية للحل — تسريب محادثات بين مستأجرين، إرسال رد لرقم خاطئ، حلقة webhook لا نهائية، استنزاف توكنات يفجّر فاتورة عميل، حظر رقم العميل من Meta.</li>
+          <li><span class="lead">التفكير العكسي (الأثر البشري):</span> كيف يؤثّر الحل على صاحب البوت (العميل المشترِك)، العميل النهائي الذي يحادث البوت، وفريق الدعم — وكيف يغيّر دورة عمل كل دور.</li>
+          <li><span class="lead">محاكاة النهايات المغلقة:</span> تتبّع رحلة «الرسالة الواحدة» من الـ webhook حتى الرد، ورحلة «التوكن الواحد» في عدّاد الاستهلاك حتى الفوترة، تحت أسوأ التزامن (رسائل متتالية سريعة / إعادة إرسال Meta / Race).</li>
+          <li><span class="lead">الاحتكام للدستور التشغيلي:</span> مطابقة صارمة لثوابت العزل (ADR-02)، والرد المتزامن (ADR-03)، وحدود التوكنز والتكلفة — دون اجتهاد يكسر هذه الثوابت.</li>
+          <li><span class="lead">الانعكاسية (Reversibility):</span> توثيق مسار التراجع / مفتاح الإيقاف مسبقاً (Feature Flag، git revert، هجرة عكسية) — لا يُنشر ما لا نملك التراجع عنه.</li>
+        </ol>
+        <div class="why"><div class="lbl">العلاقة بالمراجعة العدائية</div><p>البصيرة أداة استباقية (فرضيات وقت التصميم)، والمراجعة العدائية على الكود هي التحقّق التجريبي اللاحق. معاً حلقة تصميم ⟶ تحقّق، لا تكرار.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §10 COMPLETENESS ===================== -->
+<section id="s10" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة العاشرة</span>
+    <h2 class="sec-title">§10 — قانون اكتمال الميزة</h2>
+    <p class="sec-lead">لا واجهة خلفية تترك المستخدم «أعمى».</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§10</span><h3>الميزة لا تكتمل بلا واجهتها</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li>لا يُبنى مسار خلفي يتطلّب «إجراءً صريحاً من المستخدم» (إعادة ربط الرقم بعد انتهاء التوكن، إعادة محاولة إرسال فاشل، تأكيد اشتراك، إعادة فهرسة معرفة) ويُترك المستخدم بلا واجهة للتعامل معه.</li>
+          <li>أي ميزة لا تُعتبر مكتملة إلا إذا شملت واجهتها (الزر / الإشعار / الحالة) في نفس مسار العمل — متى احتاجت لواجهة. المهندس مسؤول عن استنتاج حاجة الإجراء وبناء واجهته ضمن خطته، لا تأجيلها كثغرة تشغيلية.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §11 WHATSAPP GOVERNANCE ===================== -->
+<section id="s11">
+  <div class="wrap">
+    <span class="eyebrow">المادة الحادية عشرة · خاص بوريد</span>
+    <h2 class="sec-title">§11 — حوكمة منصة واتساب (Meta Cloud API)</h2>
+    <p class="sec-lead">رقم واتساب العميل أصله الأثمن، ومخالفة سياسات Meta قد تعني حظر الرقم نهائياً. لذلك يُحرَس التكامل بصرامة.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§11</span><h3>قواعد التكامل مع واتساب</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>التحقق قبل المعالجة:</b> كل webhook يتحقّق من توقيع <code class="mono">X-Hub-Signature-256</code> ورمز الاشتراك <code class="mono">hub.verify_token</code> قبل أي معالجة. لا توقيع صحيح = رفض فوري <code class="mono">403</code>.</li>
+          <li><b>الردّ السريع لـ Meta:</b> الـ webhook يردّ <code class="mono">200</code> بأسرع ما يمكن؛ أي عمل قد يتجاوز مهلة Meta أو <code class="mono">max_execution_time</code> يُدفع لطابور <code class="mono">database</code> — حتى لا تُعيد Meta الإرسال وتُسبّب تكراراً.</li>
+          <li><b>احترام نافذة الـ 24 ساعة:</b> الردود الحرّة مسموحة فقط داخل نافذة خدمة العملاء (24 ساعة من آخر رسالة من العميل). خارجها يلزم <b>Template مُعتمَد</b> ومدفوع — يُمنع إرسال رد حرّ خارج النافذة. <code class="mono">window_expires_at</code> مصدر الحقيقة.</li>
+          <li><b>منع التكرار:</b> <code class="mono">wa_message_id</code> مفتاح فريد؛ تُتجاهل أي رسالة مكرّرة قبل أي استدعاء AI أو إرسال (راجع §3).</li>
+          <li><b>تخزين التوكنات مشفّرة:</b> <code class="enc">access_token</code> وأسرار WABA مشفّرة دائماً، وتُجدَّد بأمان عند الحاجة، مع واجهة لإعادة الربط عند انتهائها (راجع §10).</li>
+          <li><b>تحديد المعدّل لكل رقم:</b> Throttle على معدّل الإرسال لكل <code class="mono">phone_number_id</code> لاحترام حدود Meta وتفادي وضع علامة Spam على رقم العميل.</li>
+        </ul>
+        <div class="warn"><div class="lbl">تنبيه سياسة مُلزِم</div><p>حدّثت Meta شروط استخدام منصات الذكاء الاصطناعي التي تقدّم ردوداً آلية كخدمة عبر عدة عملاء. تسجيل المنصة كـ <strong>Tech Provider</strong> ومراجعة شروط مزوّد الخدمة <strong>إلزامي قبل أي إطلاق تجاري</strong> — لا يُربَط عميل دفعاً جديداً دون التأكد من مطابقة السياسة السارية.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §12 AI GOVERNANCE ===================== -->
+<section id="s12" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">المادة الثانية عشرة · خاص بوريد</span>
+    <h2 class="sec-title">§12 — حوكمة الذكاء الاصطناعي (Gemini)</h2>
+    <p class="sec-lead">البوت يتحدّث باسم العميل أمام عملائه. جودة الرد وأمانه وتكلفته مسؤولية هندسية محكومة، لا «صندوق أسود».</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§12</span><h3>ضوابط استدعاء النموذج والسياق</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>المدخلات غير موثوقة:</b> رسائل العملاء النهائيين ومحتوى المعرفة المرفوع تُعامَل كمدخلات غير موثوقة. الـ system prompt محصَّن بحدود واضحة، ومعزول عن محتوى المستخدم (مقاومة Prompt Injection).</li>
+          <li><b>ميزانية التوكنز والتكلفة:</b> يُرسَل آخر N جولة فقط من المحادثة لا السجل كامل، وتُحقن مقاطع المعرفة ذات الصلة فقط عند تفعيل RAG — لضبط الكمون والتكلفة. لكل مستأجر سقف استهلاك يُراقَب عبر <code class="mono">usage_counters</code>.</li>
+          <li><b>مفتاح لكل مستأجر مشفّر:</b> <code class="enc">ai_api_key</code> الخاص بالعميل (أو مفتاح المنصة) مشفّر في القاعدة، ولا يُسجَّل في أي Log أو رسالة خطأ.</li>
+          <li><b>التعامل مع فشل النموذج:</b> عند فشل أو بطء Gemini، يُعالَج الخطأ صراحةً (§3) وتُرسَل رسالة احتياطية لائقة للعميل النهائي — لا صمت ولا انهيار للـ webhook ولا حلقة إعادة محاولة تستنزف التوكنز.</li>
+          <li><b>حدود السلوك:</b> يلتزم البوت بنطاق معرفة العميل؛ تُمنع المواضيع الخارجة عن النطاق بحدود في الـ prompt، ولا يُفصح البوت عن تعليماته الداخلية أو بيانات مستأجر آخر.</li>
+          <li><b>تثبيت النموذج بوعي:</b> النموذج المعتمد <code class="mono">Gemini 2.5 Flash-Lite</code>؛ أي ترقية نموذج تمرّ كقرار موثّق مع قياس أثر التكلفة والجودة، لا تبديلاً صامتاً.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §13 SECURITY ===================== -->
+<section id="s13">
+  <div class="wrap">
+    <span class="eyebrow">المادة الثالثة عشرة</span>
+    <h2 class="sec-title">§13 — أمن المنصة (Security Baseline)</h2>
+    <p class="sec-lead">منصة متعددة العملاء تعني أن العزل والأسرار ليسا اختياريين — هذا خط الأساس الذي لا يُنزَل عنه.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">§13</span><h3>خط الأساس الأمني</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li><b>لا أسرار في الكود أو الوثائق:</b> كل المفاتيح وكلمة مرور قاعدة البيانات في <code class="k">.env</code> / أسرار CI، ويفحصها ماسح أسرار في CI. <strong>ممنوع رفع <code class="k">.env</code></strong>، وممنوع كتابة كلمة مرور <code class="mono">u828479444_M</code> في أي ملف داخل المستودع أو أي وثيقة منشورة (راجع الملحق).</li>
+          <li><b>تشفير الأسرار في القاعدة:</b> مفاتيح Gemini وتوكنات واتساب عبر <code class="k">encrypted</code> cast، بلا أي تخزين بنص صريح.</li>
+          <li><b>عزل المستأجرين أمنياً:</b> Authorization عبر Policies/Gates، ويُختبر دورياً أن أي محاولة وصول عابرة للمستأجرين تُرفض (حماية من IDOR).</li>
+          <li><b>حماية المدخلات:</b> Validation على كل فورم، حماية من Mass Assignment (<code class="mono">$fillable</code> صريح)، CSRF مفعّل على اللوحة، و Rate Limiting على تسجيل الدخول و API لكل مستأجر.</li>
+          <li><b>HTTPS إلزامي:</b> فرض SSL على <code class="mono">m.wareed.vip</code> (شهادة Hostinger)، صلاحيات ملفات صحيحة، ولا أسرار في الـ URL أو الـ Logs.</li>
+          <li><b>مبدأ أقل صلاحية:</b> الأدوار والصلاحيات (عبر spatie/permission مثلاً) تُمنح بأضيق نطاق يكفي للدور، وسجل تدقيق لإجراءات الإدارة الحسّاسة.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== §14 SHARED HOSTING DISCIPLINE ===================== -->
+<section id="s14" class="dark">
+  <div class="wrap">
+    <span class="eyebrow">المادة الرابعة عشرة</span>
+    <h2 class="sec-title">§14 — انضباط الاستضافة المشتركة وميزانية الأداء</h2>
+    <p class="sec-lead">كل ما سبق محكوم بقيد واحد: المنصة تعمل على Hostinger مشتركة. هذه القيود ليست عقبات — هي حدود التصميم المُلزِمة، ولكل قيد حلٌّ مُثبَّت.</p>
+    <div class="ct-grid">
+      <div class="ct"><span class="tag">قيد</span><h4>لا عمليات خلفية دائمة</h4><p class="sol"><b>الحل ›</b> الرد متزامن داخل الـ webhook. المهام الثقيلة فقط لطابور <code>database</code> يُشغّله Cron عبر <code>queue:work --stop-when-empty --max-time=55</code> كل دقيقة. ممنوع افتراض عامل دائم.</p></div>
+      <div class="ct"><span class="tag">قيد</span><h4>تكرار استدعاء الـ Webhook</h4><p class="sol"><b>الحل ›</b> <code>wa_message_id</code> مفتاح فريد، وتجاهل المكرر فوراً قبل أي معالجة — منع ردود وتكلفة مزدوجة.</p></div>
+      <div class="ct"><span class="tag">قيد</span><h4>محدودية الموارد والاستعلامات</h4><p class="sol"><b>الحل ›</b> فهرسة <code>tenant_id</code> و<code>phone_number_id</code>، تحميل مُسبق (Eager) لمنع N+1، وكاش لإعداد كل بوت لتفادي استعلامات متكررة في كل رسالة.</p></div>
+      <div class="ct"><span class="tag">قيد</span><h4>سرعة الإقلاع وزمن الاستجابة</h4><p class="sol"><b>الحل ›</b> <code>config:cache</code> و<code>route:cache</code> و<code>view:cache</code> و<code>--optimize-autoloader</code>، وإبقاء المسار الحرج: استعلامات قليلة + استدعاء Gemini واحد + إرسال واحد.</p></div>
+      <div class="ct"><span class="tag">قيد</span><h4>حجم قاعدة صغير ومضبوط</h4><p class="sol"><b>الحل ›</b> القاعدة الحالية <code>~1 MB</code> (جديدة). نحافظ على خفّتها: لا تخزين وسائط ثقيلة في الجداول، تقليم سجلات المحادثات القديمة بسياسة احتفاظ، وتفريغ ما لا يلزم.</p></div>
+      <div class="ct"><span class="tag">قيد</span><h4>متى ننتقل من المشتركة</h4><p class="sol"><b>الحل ›</b> التصميم API-first والطوابير المجرَّدة و webhooks عديمة الحالة تجعل الانتقال لـ VPS <code>إعدادياً فقط</code> (تبديل سائق الطابور، إضافة Horizon + Redis) عند ارتفاع الحجم — بلا إعادة كتابة.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ENFORCEMENT MAP ===================== -->
+<section id="enforce" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">الإنفاذ الآلي</span>
+    <h2 class="sec-title">⊞ — خريطة القاعدة ← الحارس</h2>
+    <p class="sec-lead">كل قاعدة في هذا الدستور مربوطة بحارس آلي يجعل تجاوزها مرئياً فوراً. القواعد ليست توصيات.</p>
+    <div class="tbl-scroll">
+      <table class="map">
+        <thead><tr><th>القاعدة</th><th>الحارس الآلي</th></tr></thead>
+        <tbody>
+          <tr><td class="rule">§2 اختبارات المسارات الحسّاسة</td><td class="guard">CI: Pest/PHPUnit + اختبار عزل المستأجرين</td></tr>
+          <tr><td class="rule">§2 جودة الكود</td><td class="guard">Laravel Pint + Larastan/PHPStan في CI</td></tr>
+          <tr><td class="rule">§3 منع الابتلاع الصامت</td><td class="guard">review + (قادم) فحص ساكن على catch بلا report()/throw</td></tr>
+          <tr><td class="rule">§3 المزامنة غير المدمّرة</td><td class="guard">اختبار يحرس مبدأ «الفارغ ≠ احذف»</td></tr>
+          <tr><td class="rule">§3 عزل المستأجرين</td><td class="guard">Global Scope مفروض + اختبار اختراق العزل</td></tr>
+          <tr><td class="rule">§3 / §11 عدم تكرار الـ webhook</td><td class="guard">قيد فريد على wa_message_id + اختبار idempotency</td></tr>
+          <tr><td class="rule">§4 دائرة التأثير</td><td class="guard">قالب الـ PR الإلزامي (pull_request_template.md)</td></tr>
+          <tr><td class="rule">§8 بوابة الهجرات</td><td class="guard">ماسح أمان الهجرات + workflow النشر</td></tr>
+          <tr><td class="rule">§9 البصيرة المعمارية</td><td class="guard">وثيقة التصميم (القواعد الخمس) تُعرض على CTO قبل الكود</td></tr>
+          <tr><td class="rule">§10 اكتمال الميزة</td><td class="guard">مراجعة PR: لا backend يتطلّب إجراء مستخدم بلا واجهته</td></tr>
+          <tr><td class="rule">§11 التحقق من توقيع واتساب</td><td class="guard">middleware توقيع + اختبار رفض التوقيع الخاطئ</td></tr>
+          <tr><td class="rule">§12 ميزانية التوكنز</td><td class="guard">سقف استهلاك لكل مستأجر + مراقبة usage_counters</td></tr>
+          <tr><td class="rule">§13 الأسرار</td><td class="guard">ماسح أسرار في CI + .gitignore لـ .env</td></tr>
+          <tr><td class="rule">إلزام وكلاء الذكاء الاصطناعي</td><td class="guard">CLAUDE.md في جذر المستودع (يُحمَّل كل جلسة)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ENGINEERING STANDARDS ===================== -->
+<section id="standards">
+  <div class="wrap">
+    <span class="eyebrow">معايير الهندسة</span>
+    <h2 class="sec-title">{ } — تفصيل الكود الملزِم</h2>
+    <p class="sec-lead">القواعد ليست توصيات — كل واحدة منها يحرسها فحص ليكون تجاوزها مرئياً فوراً. أمثلة الكود أدناه هي المرجع المعتمد.</p>
+
+    <div style="margin-top:34px"></div>
+
+    <!-- 1 observability -->
+    <div class="std">
+      <h4><span class="sn">1</span> الرصد — كل catch يصل نظام التتبّع</h4>
+      <p>المسار الحرج (استدعاء Gemini، إرسال واتساب، كتابة الرسالة) لا يبتلع خطأً صامتاً.</p>
+      <pre class="code"><span class="c-com">// ❌ ممنوع — الخطأ يضيع، لا أحد يعلم به في الإنتاج</span>
+<span class="c-kw">try</span> {
+    $reply = $this-&gt;gemini-&gt;generate($prompt);
+} <span class="c-kw">catch</span> (\Throwable $e) {
+    Log::error(<span class="c-str">'gemini failed: '</span> . $e-&gt;getMessage());
+    <span class="c-com">// ... ثم نُكمل كأن شيئاً لم يكن — العميل لا يصله رد</span>
+}
+
+<span class="c-good">// ✅ صحيح — report() لنظام التتبّع + رد احتياطي صريح للعميل</span>
+<span class="c-kw">try</span> {
+    $reply = $this-&gt;gemini-&gt;generate($prompt);
+} <span class="c-kw">catch</span> (\Throwable $e) {
+    report($e);                          <span class="c-com">// يصل Flare/Sentry/Bugsnag</span>
+    $reply = $this-&gt;fallbackReply($bot); <span class="c-com">// رسالة لائقة بدل الصمت</span>
+}</pre>
+      <p class="note"><b>لماذا:</b> رسالة للمستخدم ≠ تنبيه للفريق. الخطأ الذي لا يصل نظام التتبّع لا وجود له بالنسبة للفريق حتى يشتكي عميل. الاستثناء النادر (cleanup idempotent لا يهمّ فشله) يتطلّب تعليقاً يبرّره.</p>
+    </div>
+
+    <!-- 2 webhook signature -->
+    <div class="std">
+      <h4><span class="sn">2</span> التحقق من توقيع الـ Webhook قبل أي معالجة</h4>
+      <p>لا تُعالَج أي حمولة واتساب قبل التحقق من توقيع Meta — لمنع الحمولات المزوّرة.</p>
+      <pre class="code"><span class="c-com">// ✅ middleware يتحقق من X-Hub-Signature-256 بـ app_secret</span>
+$expected = <span class="c-str">'sha256='</span> . hash_hmac(<span class="c-str">'sha256'</span>, $request-&gt;getContent(), config(<span class="c-str">'services.whatsapp.app_secret'</span>));
+
+<span class="c-kw">if</span> (! hash_equals($expected, $request-&gt;header(<span class="c-str">'X-Hub-Signature-256'</span>, <span class="c-str">''</span>))) {
+    abort(<span class="c-str">403</span>); <span class="c-com">// رفض فوري — لا تحديد مستأجر، لا استدعاء AI</span>
+}</pre>
+      <p class="note"><b>لماذا:</b> الـ webhook نقطة دخول عامة. بلا تحقق توقيع، يستطيع أي طرف حقن رسائل وهمية واستنزاف توكنات العملاء.</p>
+    </div>
+
+    <!-- 3 idempotency -->
+    <div class="std">
+      <h4><span class="sn">3</span> منع تكرار المعالجة — Idempotency على wa_message_id</h4>
+      <p>Meta قد تعيد إرسال نفس الرسالة. التجاهل يكون قبل أي عمل مكلِّف.</p>
+      <pre class="code"><span class="c-com">// ✅ قيد فريد على wa_message_id + فحص مبكر</span>
+<span class="c-kw">if</span> (Message::where(<span class="c-str">'wa_message_id'</span>, $waMessageId)-&gt;exists()) {
+    <span class="c-kw">return</span> response(<span class="c-str">''</span>, <span class="c-str">200</span>); <span class="c-com">// مكرر — تجاهل قبل Gemini والإرسال</span>
+}
+<span class="c-com">// المخطط: $table-&gt;string('wa_message_id')-&gt;unique();</span></pre>
+      <p class="note"><b>لماذا:</b> بلا هذا الحارس، إعادة الإرسال = رد مكرر للعميل + تكلفة Gemini مضاعفة + تشويه عدّادات الاستهلاك.</p>
+    </div>
+
+    <!-- 4 tenant scope -->
+    <div class="std">
+      <h4><span class="sn">4</span> عزل المستأجرين — Global Scope لا تذكّر يدوي</h4>
+      <p>يستحيل نسيان فلتر المستأجر حين يكون مفروضاً على الـ Model نفسه.</p>
+      <pre class="code"><span class="c-com">// ❌ ممنوع — يعتمد على تذكّر المطوّر في كل استعلام</span>
+Conversation::where(<span class="c-str">'tenant_id'</span>, $tenantId)-&gt;get();
+
+<span class="c-good">// ✅ صحيح — Scope مفروض على الـ Model، يستحيل نسيانه</span>
+<span class="c-kw">class</span> Conversation <span class="c-kw">extends</span> Model
+{
+    <span class="c-kw">protected static function</span> booted(): <span class="c-kw">void</span>
+    {
+        <span class="c-kw">static</span>::addGlobalScope(<span class="c-kw">new</span> TenantScope());
+    }
+}</pre>
+      <p class="note"><b>لماذا:</b> استعلام واحد منسيّ بلا فلتر = تسريب محادثات عميل لعميل آخر. الحارس بنيوي، لا بشري.</p>
+    </div>
+
+    <!-- 5 encrypted secrets -->
+    <div class="std">
+      <h4><span class="sn">5</span> تشفير الأسرار في القاعدة — encrypted cast</h4>
+      <p>توكن واتساب ومفتاح Gemini لا يُخزَّنان بنص صريح أبداً.</p>
+      <pre class="code"><span class="c-kw">class</span> WhatsappAccount <span class="c-kw">extends</span> Model
+{
+    <span class="c-kw">protected function</span> casts(): <span class="c-kw">array</span>
+    {
+        <span class="c-kw">return</span> [
+            <span class="c-str">'access_token'</span> =&gt; <span class="c-str">'encrypted'</span>,
+            <span class="c-str">'ai_api_key'</span>   =&gt; <span class="c-str">'encrypted'</span>,
+        ];
+    }
+}</pre>
+      <p class="note"><b>لماذا:</b> تسرّب نسخة من القاعدة بلا تشفير = اختراق فوري لأرقام واتساب وفواتير Gemini لكل العملاء. ولا تُسجَّل هذه القيم في أي Log.</p>
+    </div>
+
+    <!-- 6 non-destructive sync -->
+    <div class="std">
+      <h4><span class="sn">6</span> المزامنة غير المدمّرة — الفارغ ≠ احذف</h4>
+      <p>تحديث معرفة العميل أو إعداداته لا يمحو ما لم تُرسله الواجهة.</p>
+      <pre class="code"><span class="c-com">// ❌ ممنوع — مصفوفة فارغة من الواجهة تمحو كل المعرفة</span>
+$bot-&gt;documents()-&gt;delete();
+$bot-&gt;documents()-&gt;createMany($request-&gt;input(<span class="c-str">'documents'</span>, []));
+
+<span class="c-good">// ✅ صحيح — لا شيء مُرسَل = لا تغيير؛ وإلا Diff/upsert موجّه</span>
+<span class="c-kw">if</span> ($request-&gt;missing(<span class="c-str">'documents'</span>)) {
+    <span class="c-kw">return</span>; <span class="c-com">// «لا تغيير» — ليس «احذف الكل»</span>
+}
+$bot-&gt;documents()-&gt;upsert($payload, [<span class="c-str">'id'</span>], [<span class="c-str">'title'</span>, <span class="c-str">'content'</span>]);</pre>
+      <p class="note"><b>لماذا:</b> هذا تحديداً نمط الحوادث المؤسِّسة — تحسين واجهة يرسل حمولة جزئية فيُفسَّر الغياب على أنه «امحُ»، فتُفقد قاعدة معرفة كاملة.</p>
+    </div>
+
+    <!-- 7 money/usage integers -->
+    <div class="std">
+      <h4><span class="sn">7</span> الاستهلاك والمال — أعداد صحيحة لا float</h4>
+      <p>عدّادات التوكنز والتكلفة دقيقة بالبنية، وتنسيق العرض موحّد.</p>
+      <pre class="code"><span class="c-com">// ❌ ممنوع — float للمال + تنسيق يدوي ينهار على null</span>
+$cost = $tokens * <span class="c-str">0.0000001</span>;        <span class="c-com">// انحراف عائم</span>
+echo number_format($cost) . <span class="c-str">' ج.م'</span>;   <span class="c-com">// ينهار على null</span>
+
+<span class="c-good">// ✅ صحيح — تكلفة بأصغر وحدة (ميكرو-دولار، int) + مكوّن عرض موحّد</span>
+<span class="c-com">// $rateMicrosPerMTok = تكلفة المليون توكن بالميكرو-دولار، int (مثال: $0.10 ⇒ 100_000)</span>
+<span class="c-com">// $tokens و$rateMicrosPerMTok كلاهما int — intdiv يرمي TypeError على float</span>
+$costMicros = intdiv($tokens * $rateMicrosPerMTok, <span class="c-str">1_000_000</span>);
+<span class="c-com">// النتيجة بالميكرو-دولار وتتراكم في usage_counters. العرض: &lt;x-money :micros="$costMicros" /&gt; (يقسم ÷1e6) — null-safe وموحّد</span></pre>
+      <p class="note"><b>لماذا:</b> الحساب العائم المتناثر ينحرف ويُفسد الفوترة. المنطق المالي في Service نقي مُختبَر بـ Pest، لا في الواجهة.</p>
+    </div>
+
+    <!-- 8 not into main -->
+    <div class="std">
+      <h4><span class="sn">8</span> ما لا يدخل main أبداً</h4>
+      <pre class="code"><span class="c-bad">dd() · dump() · var_dump() · ray() · console.log</span>   <span class="c-com">في كود الإنتاج → Pint/PHPStan + review</span>
+<span class="c-bad">@</span> لكتم الأخطاء                                  <span class="c-com">→ code review</span>
+<span class="c-bad">كلمات مرور / tokens / DB password في الكود</span>      <span class="c-com">→ .env فقط + CI scanner</span>
+<span class="c-bad">كود معلّق (commented-out blocks)</span>              <span class="c-com">→ code review</span>
+<span class="c-bad">استعلام على جدول مستأجر بلا فلتر المستأجر</span>      <span class="c-com">→ اختبار العزل + review</span>
+<span class="c-bad">معالجة webhook بلا تحقق توقيع / بلا idempotency</span> <span class="c-com">→ اختبار + review</span>
+<span class="c-bad">conflict markers (&lt;&lt;&lt;&lt;&lt;&lt;&lt; ======= &gt;&gt;&gt;&gt;&gt;&gt;&gt;)</span>          <span class="c-com">→ فحص ما بعد rebase</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MERGE GOVERNANCE ===================== -->
+<section id="merge" style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">حوكمة الدمج</span>
+    <h2 class="sec-title">⑂ — Merge Governance</h2>
+    <p class="sec-lead">الجودة قبل الكمية. لا يدخل <code class="mono">main</code> إلا ما اجتاز كل الحُرّاس على آخر SHA.</p>
+    <div class="law" style="margin-top:34px">
+      <div class="law-head"><span class="law-id">دمج</span><h3>قواعد الدمج إلى main</h3></div>
+      <div class="law-body">
+        <ul class="rules">
+          <li>انتظر CI الأخضر على آخر commit قبل الدمج. لا <code class="k">--auto</code> merge مع force-push على نفس الـ PR (قد يُدمج SHA قديم).</li>
+          <li>حدّ يومي معقول للدمج على <code class="mono">main</code> (≤ 5–6 PRs/يوم كحدّ ناعم). التركيز على الجودة. الاستثناء: hotfixes إنتاجية حرجة.</li>
+          <li>مراجعة إلزامية على المسارات الحسّاسة (§1): المال، الـ Auth، عزل المستأجرين، ربط واتساب، الهجرات. الباقي (UI/copy) يمكن دمجه ذاتياً بشرط CI أخضر.</li>
+          <li>بعد rebase: افحص يدوياً بقايا conflict markers، شغّل Pint/PHPStan/الاختبارات محلياً، وانتظر CI جديداً على آخر SHA.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="checklist">
+      <h4>نموذج الـ Merge Checklist</h4>
+      <ul>
+        <li>CI أخضر على آخر SHA (<b>Pint + PHPStan + Tests</b>).</li>
+        <li>لا conflict markers متبقية.</li>
+        <li>مراجعة طرف ثانٍ (إن لزم بحسب §1).</li>
+        <li>فحص دائرة التأثير موثّق (إن كان التغيير معمارياً).</li>
+        <li>اختبار رسالة واتساب حيّة تمّ (إن مُسّ مسار الرد).</li>
+        <li>خطة rollback موثّقة (إن لزم).</li>
+        <li>لا أسرار في الـ diff · لا <b>--auto</b> بعد force-push.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ENV APPENDIX ===================== -->
+<section id="env">
+  <div class="wrap">
+    <span class="eyebrow">ملحق</span>
+    <h2 class="sec-title">.env — إعداد البيئة وقاعدة البيانات</h2>
+    <p class="sec-lead">القيم المرجعية لبيئة الإنتاج على <code class="mono">m.wareed.vip</code>. تُكتب في <code class="k">.env</code> الخادم فقط — لا في المستودع ولا في هذه الوثيقة.</p>
+
+    <pre class="code" style="margin-top:34px"><span class="c-com"># ---- Application ----</span>
+APP_NAME=Wareed
+APP_ENV=production
+APP_URL=https://m.wareed.vip
+APP_DEBUG=false
+
+<span class="c-com"># ---- Database (Hostinger MySQL) ----</span>
+DB_CONNECTION=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=u828479444_M
+DB_USERNAME=u828479444_M
+DB_PASSWORD=<span class="c-bad">**********</span>   <span class="c-com"># السرّ الحقيقي في .env الخادم فقط — لا يُكتب في أي وثيقة/مستودع</span>
+
+<span class="c-com"># ---- Queue: database driver (بلا Redis/Supervisor) ----</span>
+QUEUE_CONNECTION=database
+
+<span class="c-com"># ---- WhatsApp Cloud API (أسرار — قيم حقيقية في .env فقط) ----</span>
+WHATSAPP_APP_SECRET=<span class="c-bad">**********</span>
+WHATSAPP_VERIFY_TOKEN=<span class="c-bad">**********</span>
+
+<span class="c-com"># ---- Gemini (مفتاح المنصة الافتراضي — قيمة حقيقية في .env فقط) ----</span>
+GEMINI_API_KEY=<span class="c-bad">**********</span>
+GEMINI_MODEL=gemini-2.5-flash-lite</pre>
+
+    <div class="env-note">
+      <div class="lbl"><svg viewBox="0 0 24 24" width="14" height="14" class="ic" stroke="var(--gold)"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> قرار أمني مقصود (إنفاذ §13)</div>
+      <p>تمّ استلام بيانات قاعدة البيانات (الاسم <b>u828479444_M</b>، المستخدم <b>u828479444_M</b>، وكلمة المرور). وفقاً للمادة §13 «لا أسرار في الكود أو الوثائق»، <b>لم تُكتب كلمة المرور الحقيقية في هذا الملف</b>. ضعها مباشرةً في <code class="mono">.env</code> على خادم Hostinger فقط، وتأكّد أن <code class="mono">.env</code> ضمن <code class="mono">.gitignore</code>. ننصح أيضاً بـ <b>تدوير (تغيير) كلمة المرور</b> ما دامت قد ظهرت في محادثة نصية.</p>
+    </div>
+
+    <div class="env-note" style="background:rgba(14,124,92,.05);border-color:rgba(14,124,92,.25);border-inline-start-color:var(--emerald)">
+      <div class="lbl" style="color:var(--emerald)"><svg viewBox="0 0 24 24" width="14" height="14" class="ic" stroke="var(--emerald)"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> أوامر الإنتاج بعد النشر</div>
+      <p style="color:#0A5C44"><span class="mono" style="color:#0A5C44">php artisan migrate --force</span> · <span class="mono" style="color:#0A5C44">config:cache</span> · <span class="mono" style="color:#0A5C44">route:cache</span> · <span class="mono" style="color:#0A5C44">view:cache</span> · وضبط Cron على <span class="mono" style="color:#0A5C44">queue:work --stop-when-empty --max-time=55</span> كل دقيقة (إنفاذ §14 و ADR-03).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <span class="seal"><span style="width:7px;height:7px;border-radius:50%;background:var(--signal);display:inline-block"></span> وثيقة مُلزِمة · enforceable</span>
+      <h3>هذه الوثيقة ليست «نُصحاً» — هي قواعد قابلة للقفل</h3>
+      <p>أي تعديل على هذا الدستور يحتاج موافقة CTO، وأي PR يكسر قاعدة يُرفض في المراجعة. وكلاء الذكاء الاصطناعي العاملون على وريد ملزَمون بها كالبشر تماماً. وثائق مكمّلة: <b style="color:#fff">CLAUDE.md</b> · <b style="color:#fff">ENGINEERING_STANDARDS.md</b> · <b style="color:#fff">CONTRIBUTING.md</b>.</p>
+    </div>
+    <div class="meta">
+      <div>دستور وريد الهندسي — منصة بوتات واتساب</div>
+      <div>m.wareed.vip · Laravel 12 · Gemini Flash-Lite · Cloud API</div>
+      <div>الإصدار 1.0 — 29 يونيو 2026 · إدارة الهندسة / CTO</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

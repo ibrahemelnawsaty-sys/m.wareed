@@ -1,0 +1,55 @@
+name: CI — بوابة الجودة (الدستور §2)
+
+# لا يُدمج كود لا يجتاز هذه البوابة. ممنوع --no-verify (§2).
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3, openssl, curl, bcmath, tokenizer, xml, ctype, fileinfo, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          touch database/database.sqlite
+
+      # --- الحارس 1: التنسيق (Pint) ---
+      - name: Pint (code style)
+        run: vendor/bin/pint --test
+
+      # --- الحارس 2: التحليل الساكن (Larastan/PHPStan) ---
+      - name: PHPStan (static analysis)
+        run: vendor/bin/phpstan analyse --no-progress
+
+      # --- الحارس 3: الاختبارات (تشمل عزل المستأجرين + webhook) ---
+      - name: Tests (Pest/PHPUnit)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: php artisan test

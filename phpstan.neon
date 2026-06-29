@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # المستوى المعتمد كحدّ أدنى (§2). يُرفع تدريجياً مع نضج المشروع.
+    level: 5
+
+    # ميزة عزل المستأجرين: امنع الاستعلامات الخام بلا Scope عبر المراجعة + الاختبار.
+    # (قواعد phpstan مخصّصة قد تُضاف لاحقاً لرصد حذف الـ Global Scope.)
+    ignoreErrors: []
+
+    excludePaths:
+        - app/Console/Kernel.php (?)

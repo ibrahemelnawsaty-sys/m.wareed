@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خطة نظام SaaS لإدارة بوتات واتساب الذكية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF2F0;
+    --card:#FFFFFF;
+    --ink:#0B1F1A;
+    --ink-2:#33463F;
+    --ink-soft:#5E726A;
+    --line:rgba(11,31,26,.12);
+    --line-2:rgba(11,31,26,.07);
+    --emerald:#0E7C5C;
+    --emerald-deep:#0A5C44;
+    --signal:#16C892;
+    --gold:#B8862E;
+    --gold-soft:#C8973F;
+    --night:#072019;
+    --night-2:#0A2B22;
+    --night-line:rgba(120,210,180,.16);
+    --danger:#B5462F;
+    --r:14px;
+    --maxw:1080px;
+    --mono:'IBM Plex Mono','IBM Plex Sans Arabic',monospace;
+    --ar:'IBM Plex Sans Arabic','IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--ar);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:var(--maxw);margin-inline:auto;padding-inline:26px}
+
+  /* ============ shared atoms ============ */
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.18em;
+    font-weight:500;
+    color:var(--emerald);
+    text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:10px;
+    margin-bottom:20px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1.5px;background:var(--emerald);display:inline-block}
+  .eyebrow.on-night{color:var(--signal)}
+  .eyebrow.on-night::before{background:var(--signal)}
+
+  h2.sec-title{
+    font-size:clamp(26px,4vw,40px);
+    font-weight:700;
+    line-height:1.2;
+    letter-spacing:-.01em;
+    margin-bottom:18px;
+    color:var(--ink);
+  }
+  .sec-lead{
+    font-size:18px;
+    color:var(--ink-2);
+    max-width:62ch;
+    font-weight:400;
+  }
+  .sec-lead b{color:var(--ink);font-weight:600}
+  section{padding-block:clamp(64px,9vw,108px)}
+  .num-gold{font-family:var(--mono);color:var(--gold);font-weight:500}
+
+  /* ============ HERO ============ */
+  .hero{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(22,200,146,.14), transparent 60%),
+      linear-gradient(170deg,var(--night) 0%, var(--night-2) 100%);
+    color:#EAF4EF;
+    position:relative;
+    overflow:hidden;
+    padding-block:clamp(70px,11vw,120px) clamp(70px,11vw,120px);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(var(--night-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--night-line) 1px, transparent 1px);
+    background-size:56px 56px;
+    -webkit-mask-image:radial-gradient(900px 500px at 75% 0%, #000 30%, transparent 80%);
+    mask-image:radial-gradient(900px 500px at 75% 0%, #000 30%, transparent 80%);
+    opacity:.5;pointer-events:none;
+  }
+  .hero .wrap{position:relative;z-index:2}
+  .hero-tag{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;
+    color:var(--signal);text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:10px;margin-bottom:26px;
+    border:1px solid var(--night-line);border-radius:100px;padding:7px 16px;
+  }
+  .hero-tag .dot{width:7px;height:7px;border-radius:50%;background:var(--signal);box-shadow:0 0 0 0 rgba(22,200,146,.5);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(22,200,146,.5)}70%{box-shadow:0 0 0 9px rgba(22,200,146,0)}100%{box-shadow:0 0 0 0 rgba(22,200,146,0)}}
+  .hero h1{
+    font-size:clamp(34px,6vw,62px);
+    font-weight:700;line-height:1.12;letter-spacing:-.015em;
+    max-width:18ch;margin-bottom:24px;
+  }
+  .hero h1 .accent{color:var(--signal)}
+  .hero-sub{
+    font-size:clamp(17px,2.2vw,21px);
+    color:#A9C4BA;max-width:56ch;font-weight:300;margin-bottom:48px;line-height:1.7;
+  }
+  .hero-sub b{color:#EAF4EF;font-weight:500}
+
+  /* pipeline */
+  .pipeline{
+    display:flex;align-items:stretch;gap:0;flex-wrap:nowrap;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--night-line);
+    border-radius:18px;padding:24px 20px;
+    position:relative;overflow:hidden;
+  }
+  .pipe-node{
+    flex:1 1 0;min-width:0;
+    display:flex;flex-direction:column;gap:9px;align-items:center;text-align:center;
+    padding:14px 10px;position:relative;z-index:2;
+  }
+  .pipe-ico{
+    width:46px;height:46px;border-radius:12px;
+    display:grid;place-items:center;
+    background:rgba(22,200,146,.1);border:1px solid var(--night-line);
+    color:var(--signal);
+  }
+  .pipe-ico svg{width:23px;height:23px;stroke-width:1.6}
+  .pipe-node.is-core .pipe-ico{background:rgba(22,200,146,.18);box-shadow:0 0 24px rgba(22,200,146,.25)}
+  .pipe-name{font-size:14.5px;font-weight:600;color:#EAF4EF;letter-spacing:-.01em}
+  .pipe-meta{font-family:var(--mono);font-size:10.5px;color:#7FA496;letter-spacing:.04em}
+  .pipe-chips{display:flex;flex-direction:column;gap:5px;margin-top:6px;width:100%}
+  .pipe-chip{
+    font-family:var(--mono);font-size:10px;color:#BfeAdb;
+    background:rgba(22,200,146,.09);border:1px solid var(--night-line);
+    border-radius:6px;padding:3px 7px;letter-spacing:.02em;white-space:nowrap;
+  }
+  .pipe-link{
+    flex:0 0 46px;align-self:center;position:relative;height:2px;
+    background:linear-gradient(90deg,transparent,var(--night-line),transparent);
+    z-index:1;
+  }
+  .pipe-link svg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:15px;height:15px;color:#5E8275}
+  .pipe-link .spark{
+    position:absolute;top:50%;width:5px;height:5px;border-radius:50%;
+    background:var(--signal);box-shadow:0 0 10px 2px rgba(22,200,146,.7);
+    transform:translateY(-50%);
+    animation:flow 2.8s linear infinite;
+  }
+  /* RTL flow: travel from right(0%) to left(100%) */
+  @keyframes flow{0%{right:-6px;opacity:0}10%{opacity:1}90%{opacity:1}100%{right:calc(100% + 6px);opacity:0}}
+  .pipe-link .spark.s2{animation-delay:1.4s}
+
+  .hero-stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    margin-top:1px;border:1px solid var(--night-line);border-radius:14px;overflow:hidden;
+    background:var(--night-line);
+  }
+  .hstat{background:linear-gradient(170deg,var(--night-2),var(--night));padding:20px 18px}
+  .hstat .k{font-family:var(--mono);font-size:11px;color:#7FA496;letter-spacing:.05em;margin-bottom:7px}
+  .hstat .v{font-size:16px;font-weight:600;color:#EAF4EF;line-height:1.35}
+  .hstat .v .g{color:var(--signal)}
+
+  /* ============ OVERVIEW / requirements ============ */
+  .req-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:48px}
+  .req{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:24px 24px;display:flex;gap:16px;align-items:flex-start;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .req:hover{transform:translateY(-3px);box-shadow:0 14px 34px -22px rgba(11,31,26,.4)}
+  .req-n{
+    font-family:var(--mono);font-size:12px;font-weight:600;color:var(--emerald);
+    flex:0 0 auto;background:rgba(14,124,92,.08);border:1px solid rgba(14,124,92,.18);
+    width:34px;height:34px;border-radius:9px;display:grid;place-items:center;
+  }
+  .req h4{font-size:16.5px;font-weight:600;margin-bottom:5px;letter-spacing:-.01em}
+  .req p{font-size:14.5px;color:var(--ink-soft);line-height:1.65}
+
+  /* ============ ADR (decisions) ============ */
+  .adr{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    margin-bottom:18px;overflow:hidden;
+  }
+  .adr-head{
+    display:flex;gap:18px;align-items:center;padding:22px 26px;
+    border-bottom:1px solid var(--line-2);flex-wrap:wrap;
+  }
+  .adr-id{
+    font-family:var(--mono);font-size:11.5px;font-weight:600;letter-spacing:.06em;
+    color:#fff;background:var(--emerald);padding:6px 12px;border-radius:7px;flex:0 0 auto;
+  }
+  .adr-head h4{font-size:19px;font-weight:600;letter-spacing:-.01em;flex:1 1 240px;min-width:0}
+  .adr-pick{
+    font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:500;
+    border:1px solid rgba(184,134,46,.35);background:rgba(184,134,46,.07);
+    padding:6px 13px;border-radius:100px;white-space:nowrap;
+  }
+  .adr-body{padding:22px 26px 26px}
+  .adr-body p{font-size:15px;color:var(--ink-2);margin-bottom:14px}
+  .adr-body p:last-child{margin-bottom:0}
+  .adr-body strong{color:var(--ink);font-weight:600}
+  .why{
+    background:#F5F8F6;border-inline-start:3px solid var(--emerald);
+    border-radius:0 9px 9px 0;padding:14px 18px;margin-top:6px;
+  }
+  .why .lbl{font-family:var(--mono);font-size:11px;color:var(--emerald);font-weight:600;letter-spacing:.08em;margin-bottom:5px}
+  .why p{font-size:14px;color:var(--ink-2);margin:0}
+  .warn{
+    background:rgba(181,70,47,.05);border-inline-start:3px solid var(--danger);
+    border-radius:0 9px 9px 0;padding:14px 18px;margin-top:14px;
+  }
+  .warn .lbl{font-family:var(--mono);font-size:11px;color:var(--danger);font-weight:600;letter-spacing:.06em;margin-bottom:5px}
+  .warn p{font-size:14px;color:#7a3322;margin:0}
+
+  /* ============ modules ============ */
+  .mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px}
+  .mod{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;
+    transition:transform .25s ease, border-color .25s ease;
+  }
+  .mod:hover{transform:translateY(-4px);border-color:rgba(14,124,92,.35)}
+  .mod-ico{
+    width:44px;height:44px;border-radius:11px;display:grid;place-items:center;
+    background:rgba(14,124,92,.08);color:var(--emerald);margin-bottom:18px;
+  }
+  .mod-ico svg{width:22px;height:22px;stroke-width:1.7}
+  .mod h4{font-size:17px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em}
+  .mod p{font-size:14px;color:var(--ink-soft);line-height:1.65}
+
+  /* ============ stack ============ */
+  .stack-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:start;margin-top:48px}
+  .stack-list{display:flex;flex-direction:column;gap:2px}
+  .stk{
+    display:flex;gap:16px;align-items:baseline;padding:16px 4px;border-bottom:1px solid var(--line-2);
+  }
+  .stk:last-child{border-bottom:none}
+  .stk-layer{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex:0 0 96px;letter-spacing:.03em;padding-top:3px}
+  .stk-main{flex:1}
+  .stk-tech{font-size:15.5px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+  .stk-tech span{font-family:var(--mono);font-size:13px;color:var(--emerald);font-weight:500}
+  .stk-why{font-size:13.5px;color:var(--ink-soft);margin-top:2px}
+  .avoid{
+    background:var(--night);color:#D9E8E1;border-radius:16px;padding:28px 26px;position:sticky;top:24px;
+  }
+  .avoid h4{color:#fff;font-size:16px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:9px}
+  .avoid .sub{font-size:13px;color:#86A89B;margin-bottom:20px}
+  .avoid ul{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .avoid li{font-size:13.5px;color:#C2D6CD;padding-inline-start:24px;position:relative;line-height:1.55}
+  .avoid li::before{
+    content:"✕";position:absolute;right:0;top:1px;color:var(--danger);
+    font-size:12px;font-weight:700;font-family:var(--mono);
+  }
+  .avoid li b{color:#fff;font-family:var(--mono);font-size:12.5px;font-weight:600}
+
+  /* ============ hosting constraints ============ */
+  .host-band{background:var(--night);color:#E4F1EB}
+  .host-band h2.sec-title{color:#fff}
+  .host-band .sec-lead{color:#A9C4BA}
+  .host-band .sec-lead b{color:#fff}
+  .host-band .eyebrow{color:var(--signal)}
+  .host-band .eyebrow::before{background:var(--signal)}
+  .ct-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:48px;background:var(--night-line);border:1px solid var(--night-line);border-radius:16px;overflow:hidden}
+  .ct{background:linear-gradient(170deg,var(--night-2),var(--night));padding:26px 24px}
+  .ct-problem{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .ct-problem .tag{font-family:var(--mono);font-size:10.5px;color:#E9A88F;background:rgba(181,70,47,.16);border:1px solid rgba(181,70,47,.3);padding:4px 9px;border-radius:6px;letter-spacing:.04em}
+  .ct h4{font-size:16.5px;font-weight:600;color:#fff;margin-bottom:10px;line-height:1.4}
+  .ct .sol{font-size:14px;color:#B6CEC4;line-height:1.7}
+  .ct .sol b{color:var(--signal);font-weight:600;font-family:var(--mono);font-size:13px}
+  .ct code{font-family:var(--mono);font-size:12.5px;background:rgba(22,200,146,.1);color:#9FE6CC;padding:2px 7px;border-radius:5px;direction:ltr;display:inline-block}
+
+  /* ============ schema ============ */
+  .schema-scroll{margin-top:48px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card)}
+  table.schema{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+  table.schema thead th{
+    background:#F5F8F6;text-align:right;font-family:var(--mono);font-size:11.5px;
+    font-weight:600;color:var(--ink-2);letter-spacing:.05em;padding:15px 20px;
+    border-bottom:1px solid var(--line);text-transform:uppercase;
+  }
+  table.schema td{padding:15px 20px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  table.schema tbody tr:last-child td{border-bottom:none}
+  table.schema tbody tr:hover{background:#FAFCFB}
+  .tbl-name{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--emerald);direction:ltr;text-align:right}
+  .tbl-desc{color:var(--ink-2)}
+  .tbl-cols{color:var(--ink-soft);font-family:var(--mono);font-size:11.5px;direction:ltr;text-align:right;line-height:1.7}
+  .tbl-cols .enc{color:var(--gold)}
+  .schema-foot{display:flex;align-items:center;gap:10px;padding:14px 20px;font-size:12.5px;color:var(--ink-soft);background:#F5F8F6;border-top:1px solid var(--line)}
+  .schema-foot .enc-key{width:11px;height:11px;border-radius:3px;background:var(--gold);display:inline-block}
+
+  /* ============ security ============ */
+  .sec-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:48px}
+  .scard{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px}
+  .scard-ico{flex:0 0 auto;width:36px;height:36px;border-radius:9px;background:rgba(184,134,46,.1);color:var(--gold-soft);display:grid;place-items:center}
+  .scard-ico svg{width:19px;height:19px;stroke-width:1.7}
+  .scard h4{font-size:15px;font-weight:600;margin-bottom:3px}
+  .scard p{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+
+  /* ============ roadmap ============ */
+  .road{margin-top:54px;position:relative;padding-inline-start:0}
+  .phase{display:grid;grid-template-columns:130px 1fr;gap:30px;position:relative;padding-bottom:38px}
+  .phase:last-child{padding-bottom:0}
+  .phase-rail{position:relative;display:flex;flex-direction:column;align-items:center}
+  .phase-dot{
+    width:46px;height:46px;border-radius:50%;flex:0 0 auto;z-index:2;
+    background:var(--card);border:2px solid var(--emerald);
+    display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:15px;color:var(--emerald);
+  }
+  .phase.done .phase-dot{background:var(--emerald);color:#fff}
+  .phase-line{position:absolute;top:46px;bottom:-38px;width:2px;background:var(--line);z-index:1}
+  .phase:last-child .phase-line{display:none}
+  .phase-when{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:12px;text-align:center;letter-spacing:.03em}
+  .phase-body{padding-top:3px}
+  .phase-body h4{font-size:19px;font-weight:600;margin-bottom:5px;letter-spacing:-.01em}
+  .phase-body h4 .ms{font-family:var(--mono);font-size:12px;color:var(--gold);font-weight:500;margin-inline-start:8px}
+  .phase-body>p{font-size:14.5px;color:var(--ink-soft);margin-bottom:14px;max-width:60ch}
+  .phase-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .ptag{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:#fff;border:1px solid var(--line);border-radius:7px;padding:5px 11px;direction:ltr}
+
+  /* ============ calculator ============ */
+  .calc-band{background:linear-gradient(170deg,#F4F8F6,#EAF1EE)}
+  .calc{
+    margin-top:48px;background:var(--card);border:1px solid var(--line);border-radius:20px;
+    display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;
+    box-shadow:0 30px 70px -50px rgba(11,31,26,.5);
+  }
+  .calc-controls{padding:34px 32px;border-inline-end:1px solid var(--line-2)}
+  .calc-controls h3{font-size:17px;font-weight:600;margin-bottom:4px}
+  .calc-controls .hint{font-size:13px;color:var(--ink-soft);margin-bottom:26px}
+  .field{margin-bottom:22px}
+  .field-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .field label{font-size:14px;font-weight:500;color:var(--ink-2)}
+  .field .val{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--emerald);direction:ltr}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:5px;
+    background:linear-gradient(90deg,var(--emerald) var(--p,40%), #E1E8E5 var(--p,40%));
+    outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#fff;border:3px solid var(--emerald);cursor:pointer;
+    box-shadow:0 2px 8px rgba(11,31,26,.25);transition:transform .12s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2)}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--emerald);cursor:pointer}
+  .model-sel{display:flex;gap:8px;margin-top:6px}
+  .model-opt{
+    flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;
+    background:#fff;transition:all .18s ease;text-align:center;
+  }
+  .model-opt.active{border-color:var(--emerald);background:rgba(14,124,92,.05)}
+  .model-opt .mo-name{font-size:13px;font-weight:600;color:var(--ink);direction:ltr}
+  .model-opt .mo-price{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:2px;direction:ltr}
+  .model-opt.active .mo-price{color:var(--emerald)}
+
+  .calc-out{padding:34px 32px;background:linear-gradient(175deg,#FBFDFC,#F4F8F6);display:flex;flex-direction:column}
+  .out-total{margin-bottom:26px}
+  .out-total .ol{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);letter-spacing:.06em;margin-bottom:6px}
+  .out-total .ov{font-size:clamp(38px,6vw,52px);font-weight:700;color:var(--ink);line-height:1;letter-spacing:-.02em;font-family:var(--mono)}
+  .out-total .ov .cur{font-size:24px;color:var(--emerald);font-weight:500}
+  .out-total .osub{font-size:13px;color:var(--ink-soft);margin-top:8px}
+  .out-rows{display:flex;flex-direction:column;gap:1px;background:var(--line-2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:20px}
+  .orow{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 18px}
+  .orow .orl{font-size:13.5px;color:var(--ink-2)}
+  .orow .orl small{display:block;font-size:11px;color:var(--ink-soft);font-family:var(--mono)}
+  .orow .orv{font-family:var(--mono);font-size:14.5px;font-weight:600;color:var(--ink);direction:ltr}
+  .orow .orv.free{color:var(--emerald)}
+  .out-note{font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:auto}
+  .out-note b{color:var(--ink-2)}
+
+  /* ============ footer ============ */
+  .footer{background:var(--night);color:#9FBBB0;padding-block:60px 50px}
+  .footer .wrap{display:flex;justify-content:space-between;align-items:flex-end;gap:30px;flex-wrap:wrap}
+  .footer h3{color:#fff;font-size:22px;font-weight:600;margin-bottom:10px;letter-spacing:-.01em}
+  .footer p{font-size:14px;max-width:48ch;line-height:1.7}
+  .footer .meta{font-family:var(--mono);font-size:11.5px;color:#6E8C80;letter-spacing:.05em;text-align:start}
+  .footer .meta div{margin-bottom:5px}
+
+  /* ============ responsive ============ */
+  @media (max-width:900px){
+    .req-grid,.mod-grid,.sec-grid,.ct-grid{grid-template-columns:1fr}
+    .hero-stats{grid-template-columns:repeat(2,1fr)}
+    .stack-wrap{grid-template-columns:1fr;gap:32px}
+    .avoid{position:static}
+    .calc{grid-template-columns:1fr}
+    .calc-controls{border-inline-end:none;border-bottom:1px solid var(--line-2)}
+    .pipeline{flex-direction:column;gap:0}
+    .pipe-link{flex:0 0 36px;width:2px;height:36px;background:linear-gradient(180deg,transparent,var(--night-line),transparent);margin-inline:auto}
+    .pipe-link svg{transform:translate(-50%,-50%) rotate(-90deg)}
+    .pipe-link .spark{top:auto;right:50%;transform:translateX(50%);animation:flowV 2.8s linear infinite}
+    @keyframes flowV{0%{top:-6px;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:calc(100% + 6px);opacity:0}}
+    .pipe-chips{flex-direction:row;justify-content:center;flex-wrap:wrap}
+  }
+  @media (max-width:560px){
+    .phase{grid-template-columns:54px 1fr;gap:18px}
+    .phase-when{font-size:10px}
+    .hero-stats{grid-template-columns:1fr}
+    table.schema{font-size:13px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="wrap">
+    <span class="hero-tag"><span class="dot"></span>خطة معمارية تقنية · منصة SaaS</span>
+    <h1>منصة لإدارة بوتات <span class="accent">واتساب الذكية</span> — مبنية لتعمل على استضافة مشتركة</h1>
+    <p class="hero-sub">
+      نظام <b>Laravel</b> متعدد المستأجرين يربط كل عميل برقم واتساب خاص به وقاعدة معرفة خاصة،
+      ويرد آلياً عبر <b>Gemini&nbsp;Flash-Lite</b>. مصمَّم بالكامل حول قيد واحد حاسم:
+      <b>الخفّة والسرعة على استضافة Hostinger المشتركة</b> — بدون عمليات خلفية دائمة، وبدون بنية ثقيلة.
+    </p>
+
+    <!-- signature: live message pipeline -->
+    <div class="pipeline" aria-label="مسار الرسالة داخل النظام">
+      <div class="pipe-node">
+        <div class="pipe-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></div>
+        <div class="pipe-name">عميل واتساب</div>
+        <div class="pipe-meta">يرسل رسالة</div>
+      </div>
+
+      <div class="pipe-link"><span class="spark"></span><span class="spark s2"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+
+      <div class="pipe-node">
+        <div class="pipe-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="18" cy="17" r="2.2"/></svg></div>
+        <div class="pipe-name">Meta Cloud API</div>
+        <div class="pipe-meta">Webhook رسمي</div>
+      </div>
+
+      <div class="pipe-link"><span class="spark"></span><span class="spark s2"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+
+      <div class="pipe-node is-core">
+        <div class="pipe-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg></div>
+        <div class="pipe-name">نظام البوت — Laravel</div>
+        <div class="pipe-meta">المعالجة المركزية</div>
+        <div class="pipe-chips">
+          <span class="pipe-chip">تحديد المستأجر</span>
+          <span class="pipe-chip">قاعدة المعرفة</span>
+          <span class="pipe-chip">Gemini Flash-Lite</span>
+        </div>
+      </div>
+
+      <div class="pipe-link"><span class="spark"></span><span class="spark s2"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+
+      <div class="pipe-node">
+        <div class="pipe-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+        <div class="pipe-name">رد فوري</div>
+        <div class="pipe-meta">داخل نافذة 24 ساعة · مجاناً</div>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hstat"><div class="k">البنية</div><div class="v">متعدد المستأجرين <span class="g">Multi-tenant</span></div></div>
+      <div class="hstat"><div class="k">نموذج الذكاء</div><div class="v"><span class="g">Gemini 2.5</span> Flash-Lite</div></div>
+      <div class="hstat"><div class="k">تكلفة الرد</div><div class="v">أجزاء من <span class="g">السنت</span></div></div>
+      <div class="hstat"><div class="k">واتساب</div><div class="v">عبر <span class="g">Cloud API</span> الرسمي</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== OVERVIEW / REQUIREMENTS ===================== -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">نظرة عامة</span>
+    <h2 class="sec-title">ما الذي نبنيه بالضبط</h2>
+    <p class="sec-lead">
+      منصة تبيعها أنت لعملائك (B2B). كل عميل يحصل على <b>حساب مستقل</b> داخل لوحة تحكم واحدة،
+      يربط رقم واتساب الخاص به، يضيف بياناته ومعرفته، ويحصل على بوت ذكي يرد على عملائه تلقائياً —
+      وكل شيء يُدار عبر <b>API موحّد</b> يخدم لوحة التحكم والتطبيقات مستقبلاً.
+    </p>
+
+    <div class="req-grid">
+      <div class="req">
+        <div class="req-n">01</div>
+        <div><h4>حسابات وصلاحيات للعملاء</h4>
+        <p>كل عميل = مستأجر (Tenant) مستقل بمستخدميه وأدواره وبياناته، معزول تماماً عن بقية العملاء داخل نفس قاعدة البيانات.</p></div>
+      </div>
+      <div class="req">
+        <div class="req-n">02</div>
+        <div><h4>مفاتيح الذكاء الاصطناعي لكل عميل</h4>
+        <p>يخزّن كل عميل مفتاح Gemini الخاص به (أو يستخدم مفتاح المنصة)، مع تخصيص الـ system prompt ودرجة الإبداع لبوته.</p></div>
+      </div>
+      <div class="req">
+        <div class="req-n">03</div>
+        <div><h4>إضافة البيانات الخاصة</h4>
+        <p>يرفع العميل معرفته (أسئلة شائعة، منتجات، سياسات، ملفات) لتُحقن في سياق Gemini فيرد البوت بمعلومات العميل نفسه.</p></div>
+      </div>
+      <div class="req">
+        <div class="req-n">04</div>
+        <div><h4>ربط رقم واتساب الخاص</h4>
+        <p>يربط العميل رقمه عبر Meta Cloud API، فتصل رسائله إلى النظام ويُرسل الرد باسم رقم العميل — لا أرقام مشتركة.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ARCHITECTURE DECISIONS ===================== -->
+<section style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">القرارات المعمارية</span>
+    <h2 class="sec-title">أربعة قرارات تحدد المشروع</h2>
+    <p class="sec-lead" style="margin-bottom:6px">
+      هذه القرارات الأربعة هي ما يجعل الخطة قابلة للتنفيذ فعلياً على استضافة مشتركة — وليست مجرد معمارية عامة.
+      كل قرار مُبرَّر بالقيد الذي يفرضه.
+    </p>
+
+    <!-- ADR 1 -->
+    <div class="adr" style="margin-top:46px">
+      <div class="adr-head">
+        <span class="adr-id">ADR-01</span>
+        <h4>تكامل واتساب عبر Cloud API الرسمي</h4>
+        <span class="adr-pick">القرار: WhatsApp Cloud API</span>
+      </div>
+      <div class="adr-body">
+        <p>المكتبات غير الرسمية (Baileys / whatsapp-web.js) تتطلب عملية <strong>Node.js دائمة لكل رقم</strong> — وهذا مستحيل على الاستضافة المشتركة، إضافةً لخطر حظر الأرقام. الحل الوحيد العملي هو الـ Cloud API الرسمي من Meta: تكامل قائم على <strong>Webhook + HTTP فقط</strong>، وMeta تستضيف الاتصال نيابةً عنك.</p>
+        <p>تسجّل تطبيقك كـ <strong>Tech Provider</strong>، فيربط كل عميل حساب واتساب الخاص به (WABA) عبر <strong>Embedded Signup</strong> تحت تطبيقك، ويصلك معرّف الرقم (<code>phone_number_id</code>) الذي نحدد به المستأجر لاحقاً.</p>
+        <div class="why"><div class="lbl">لماذا</div><p>لا توجد عملية دائمة = متوافق 100% مع الاستضافة المشتركة. والردود داخل نافذة الخدمة (24 ساعة) مجانية، فتكلفة واتساب شبه صفرية لبوت رد.</p></div>
+        <div class="warn"><div class="lbl">تنبيه سياسة</div><p>حدّثت Meta في مارس 2026 شروط استخدام منصات الذكاء الاصطناعي التي تقدّم ردوداً آلية كخدمة عبر عدة عملاء. راجِع شروط مزوّد الخدمة قبل الإطلاق التجاري لتجنّب مخالفات.</p></div>
+      </div>
+    </div>
+
+    <!-- ADR 2 -->
+    <div class="adr">
+      <div class="adr-head">
+        <span class="adr-id">ADR-02</span>
+        <h4>تعدد المستأجرين بقاعدة بيانات واحدة</h4>
+        <span class="adr-pick">القرار: Single DB + tenant_id</span>
+      </div>
+      <div class="adr-body">
+        <p>أسلوب «قاعدة بيانات لكل عميل» ثقيل جداً على Hostinger (حدود على عدد القواعد والموارد). البديل الأخف: <strong>قاعدة واحدة + عمود <code>tenant_id</code></strong> في كل جدول، مع <strong>Global Scope</strong> في Eloquent يفلتر تلقائياً حسب المستأجر الحالي.</p>
+        <p>يُحدَّد المستأجر من <code>phone_number_id</code> عند وصول الـ webhook، ومن المستخدم المسجَّل داخل لوحة التحكم. عزل المستأجرين يُفرَض في كل استعلام عبر سمة <code>BelongsToTenant</code> وسياسات الوصول.</p>
+        <div class="why"><div class="lbl">لماذا</div><p>أخف استهلاكاً للموارد، وأبسط في النشر والصيانة على استضافة محدودة — مع عزل أمني صارم يمنع تسرّب البيانات بين العملاء (IDOR).</p></div>
+      </div>
+    </div>
+
+    <!-- ADR 3 -->
+    <div class="adr">
+      <div class="adr-head">
+        <span class="adr-id">ADR-03</span>
+        <h4>معالجة الرسائل بدون Queue Workers دائمة</h4>
+        <span class="adr-pick">القرار: رد متزامن + Cron للمهام الثقيلة</span>
+      </div>
+      <div class="adr-body">
+        <p>القيد: لا يمكن تشغيل <code>queue:work</code> كعملية دائمة (لا Supervisor / Horizon)، وأقل فاصل للـ Cron دقيقة واحدة — وهذا بطيء جداً لمحادثة حية.</p>
+        <p>الحل: <strong>معالجة متزامنة داخل الـ webhook</strong> — تحقق من التوقيع، ثم حدد المستأجر، احقن المعرفة، استدعِ Gemini، وأرسل الرد. لأن Flash-Lite سريع (1–3 ثوانٍ) و<code>max_execution_time</code> على Hostinger يكفي بسهولة. أما المهام غير العاجلة (التحليلات، فهرسة المعرفة، المتابعات) فتُدفع لطابور <strong>database</strong> ويُعالجها Cron كل دقيقة.</p>
+        <div class="why"><div class="lbl">لماذا</div><p>يلغي مشكلة العامل الدائم تماماً، ويعطي رداً فورياً للعميل، ويبقي المسار الحرج بسيطاً وسريعاً.</p></div>
+      </div>
+    </div>
+
+    <!-- ADR 4 -->
+    <div class="adr">
+      <div class="adr-head">
+        <span class="adr-id">ADR-04</span>
+        <h4>قاعدة المعرفة: الحقن في السياق أولاً</h4>
+        <span class="adr-pick">القرار: Prompt-Injection ثم RAG لاحقاً</span>
+      </div>
+      <div class="adr-body">
+        <p>معظم قواعد معرفة الأعمال الصغيرة صغيرة (أسئلة شائعة، منتجات، مواعيد). وبما أن Gemini Flash-Lite يدعم سياقاً ضخماً (حتى مليون توكن)، نبدأ بأبسط حل: <strong>حقن معرفة العميل كاملةً (أو جزء كبير منها) في الـ system prompt</strong> — بلا قاعدة متجهات، بلا حِمل إضافي على الاستضافة.</p>
+        <p>عند نمو المعرفة، نُفعّل <strong>الاسترجاع الدلالي (RAG)</strong>: تقطيع المحتوى، توليد embeddings عبر Gemini، تخزينها، واسترجاع أفضل المقاطع لحقنها فقط — مع خيار قاعدة متجهات خارجية مُدارة لإبقاء الاستضافة خفيفة.</p>
+        <div class="why"><div class="lbl">لماذا</div><p>«ابدأ بسيطاً»: تشتغل المنصة فوراً وبتكلفة أدنى، وتُضيف تعقيد RAG فقط عندما تستدعيه الحاجة الفعلية.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CORE MODULES ===================== -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">الوحدات الأساسية</span>
+    <h2 class="sec-title">مكوّنات النظام</h2>
+    <p class="sec-lead">ست وحدات تشكّل المنصة، كلٌّ منها مكشوف عبر الـ API الموحّد.</p>
+
+    <div class="mod-grid">
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h4>المستأجرون والمستخدمون</h4>
+        <p>تسجيل العملاء، إدارة المستخدمين والأدوار (مالك الحساب / موظف)، عزل كامل للبيانات، ولوحة تحكم لكل مستأجر.</p>
+      </div>
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <h4>إعداد البوت والذكاء</h4>
+        <p>لكل بوت: الـ system prompt، النموذج (Flash-Lite)، مفتاح API، درجة الإبداع، عدد جولات السياق المُرسلة، ورسالة الترحيب.</p>
+      </div>
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <h4>قاعدة المعرفة</h4>
+        <p>إضافة المحتوى نصاً أو أسئلة/أجوبة أو ملفات (PDF/Word تُستخرج نصاً)، مع التقطيع والتخزين والتحضير للحقن أو الاسترجاع.</p>
+      </div>
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <h4>ربط واتساب</h4>
+        <p>ربط رقم العميل (Embedded Signup)، حفظ التوكنات بشكل مشفّر، التحقق من الـ webhook، وإدارة حالة الاتصال.</p>
+      </div>
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h4>المحادثات والسجل</h4>
+        <p>تخزين كل محادثة ورسائلها، منع تكرار الـ webhook، تتبّع نافذة الـ 24 ساعة، وعرض المحادثات في اللوحة.</p>
+      </div>
+      <div class="mod">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg></div>
+        <h4>الاستهلاك والفوترة</h4>
+        <p>عدّاد الرسائل والتوكنز والتكلفة لكل عميل، وحدود الباقات، واشتراكات اختيارية عبر بوابة دفع محلية (Moyasar / Tap).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TECH STACK ===================== -->
+<section style="background:linear-gradient(180deg,#F6F9F7,#fff);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">حزمة التقنيات</span>
+    <h2 class="sec-title">اختيارات خفيفة ومُبرَّرة</h2>
+    <p class="sec-lead">كل اختيار محكوم بمبدأ واحد: أقصى أداء بأقل حِمل على استضافة مشتركة.</p>
+
+    <div class="stack-wrap">
+      <div class="stack-list">
+        <div class="stk"><div class="stk-layer">Backend</div><div class="stk-main"><div class="stk-tech">Laravel <span>12</span> · PHP <span>8.3+</span></div><div class="stk-why">إطار العمل الأساسي، مع OPcache المتوفر على Hostinger.</div></div></div>
+        <div class="stk"><div class="stk-layer">قاعدة البيانات</div><div class="stk-main"><div class="stk-tech">MySQL <span>8</span></div><div class="stk-why">المتوفّر افتراضياً على الاستضافة المشتركة، مع فهارس دقيقة.</div></div></div>
+        <div class="stk"><div class="stk-layer">المصادقة / API</div><div class="stk-main"><div class="stk-tech">Laravel <span>Sanctum</span></div><div class="stk-why">توكنات خفيفة لـ API-first، جاهزة لتطبيقات الجوال لاحقاً.</div></div></div>
+        <div class="stk"><div class="stk-layer">لوحة التحكم</div><div class="stk-main"><div class="stk-tech">Blade + <span>Alpine.js</span> + Tailwind</div><div class="stk-why">واجهة تفاعلية بلا SPA ثقيل — أخف خيار وأسرع تحميل.</div></div></div>
+        <div class="stk"><div class="stk-layer">الطابور</div><div class="stk-main"><div class="stk-tech">Database <span>Driver</span> + Cron</div><div class="stk-why">بلا Redis/Supervisor — للمهام غير العاجلة فقط.</div></div></div>
+        <div class="stk"><div class="stk-layer">الذكاء</div><div class="stk-main"><div class="stk-tech">Gemini <span>2.5 Flash-Lite</span></div><div class="stk-why">عبر Laravel HTTP — أرخص نموذج قوي بالعربية وأسرعها.</div></div></div>
+      </div>
+
+      <aside class="avoid">
+        <h4><svg viewBox="0 0 24 24" fill="none" stroke="#E9A88F" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg> نتجنّبها على الاستضافة المشتركة</h4>
+        <p class="sub">كلها تتطلب عمليات دائمة أو خدمات غير متاحة</p>
+        <ul>
+          <li><b>Laravel Octane</b> — يتطلب عملية خادم دائمة.</li>
+          <li><b>Horizon + Redis</b> — قد لا يتوفر Redis، ويحتاج Supervisor.</li>
+          <li><b>Reverb / WebSockets</b> — يتطلب اتصالاً دائماً.</li>
+          <li><b>Baileys / wweb.js</b> — عملية Node لكل رقم + خطر حظر.</li>
+          <li><b>queue:work دائم</b> — لا مشرف عمليات على Hostinger.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOSTING CONSTRAINTS (dark band) ===================== -->
+<section class="host-band">
+  <div class="wrap">
+    <span class="eyebrow">جوهر الخطة</span>
+    <h2 class="sec-title">قيود Hostinger والحلول المقابلة</h2>
+    <p class="sec-lead">هذا ما يميّز الخطة عن أي معمارية عامة: كل قيد تقني للاستضافة المشتركة، وحلّه العملي مباشرةً.</p>
+
+    <div class="ct-grid">
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>لا عمليات خلفية دائمة</h4>
+        <p class="sol"><b>الحل ›</b> الرد يُنفَّذ متزامناً داخل الـ webhook (Flash-Lite سريع). المهام الثقيلة فقط تذهب لطابور <code>database</code> يُشغّله Cron عبر <code>queue:work --stop-when-empty --max-time=55</code> كل دقيقة.</p>
+      </div>
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>تكرار استدعاء الـ Webhook</h4>
+        <p class="sol"><b>الحل ›</b> Meta قد تعيد الإرسال. نخزّن <code>wa_message_id</code> كمفتاح فريد ونتجاهل المكرر فوراً — منع معالجة مزدوجة وردود مكررة.</p>
+      </div>
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>محدودية الموارد والاستعلامات</h4>
+        <p class="sol"><b>الحل ›</b> فهرسة <code>tenant_id</code> و<code>phone_number_id</code>، تحميل مُسبق (Eager) لمنع N+1، وتخزين إعداد كل بوت في الكاش لتفادي استعلامات متكررة في كل رسالة.</p>
+      </div>
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>سرعة الإقلاع وزمن الاستجابة</h4>
+        <p class="sol"><b>الحل ›</b> <code>config:cache</code> و<code>route:cache</code> و<code>view:cache</code> و<code>--optimize-autoloader</code>، وإبقاء المسار الحرج عند استعلامات قليلة + استدعاء Gemini واحد + إرسال واحد.</p>
+      </div>
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>التحكم بالتوكنز والتكلفة</h4>
+        <p class="sol"><b>الحل ›</b> إرسال آخر N جولة فقط من المحادثة لا السجل كامل، وحقن مقاطع المعرفة ذات الصلة فقط عند تفعيل RAG — لضبط التكلفة والكمون معاً.</p>
+      </div>
+      <div class="ct">
+        <div class="ct-problem"><span class="tag">القيد</span></div>
+        <h4>أمان المفاتيح والأسرار</h4>
+        <p class="sol"><b>الحل ›</b> تشفير مفاتيح Gemini وتوكنات واتساب في قاعدة البيانات عبر <code>encrypted</code> cast، وعدم تخزين أي سرٍّ بنص صريح إطلاقاً.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== DB SCHEMA ===================== -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">قاعدة البيانات</span>
+    <h2 class="sec-title">المخطط الأساسي</h2>
+    <p class="sec-lead">الجداول الجوهرية للنسخة الأولى. كل جدول (عدا <span class="num-gold">tenants</span>) يحمل <span class="num-gold">tenant_id</span> للعزل.</p>
+
+    <div class="schema-scroll">
+      <table class="schema">
+        <thead><tr><th>الجدول</th><th>الوظيفة</th><th>أعمدة مفتاحية</th></tr></thead>
+        <tbody>
+          <tr><td class="tbl-name">tenants</td><td class="tbl-desc">العملاء (المستأجرون)</td><td class="tbl-cols">id · name · plan · status</td></tr>
+          <tr><td class="tbl-name">users</td><td class="tbl-desc">مستخدمو كل عميل وأدوارهم</td><td class="tbl-cols">id · tenant_id · email · role</td></tr>
+          <tr><td class="tbl-name">whatsapp_accounts</td><td class="tbl-desc">إعداد رقم وبوت العميل</td><td class="tbl-cols">phone_number_id · waba_id · <span class="enc">access_token</span> · system_prompt · ai_model · <span class="enc">ai_api_key</span></td></tr>
+          <tr><td class="tbl-name">knowledge_documents</td><td class="tbl-desc">مصادر معرفة العميل</td><td class="tbl-cols">id · bot_id · title · type · content</td></tr>
+          <tr><td class="tbl-name">knowledge_chunks</td><td class="tbl-desc">مقاطع للاسترجاع (RAG)</td><td class="tbl-cols">document_id · content · embedding?</td></tr>
+          <tr><td class="tbl-name">conversations</td><td class="tbl-desc">محادثات العملاء النهائيين</td><td class="tbl-cols">wa_contact_id · window_expires_at · status</td></tr>
+          <tr><td class="tbl-name">messages</td><td class="tbl-desc">الرسائل الواردة والصادرة</td><td class="tbl-cols"><span class="enc">wa_message_id</span> · direction · tokens_in · tokens_out</td></tr>
+          <tr><td class="tbl-name">usage_counters</td><td class="tbl-desc">استهلاك يومي لكل عميل</td><td class="tbl-cols">tenant_id · date · messages · cost</td></tr>
+        </tbody>
+      </table>
+      <div class="schema-foot"><span class="enc-key"></span> أعمدة مشفّرة (encrypted cast) — أسرار ومعرّفات حسّاسة</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECURITY ===================== -->
+<section style="background:linear-gradient(180deg,#fff,#F6F9F7);border-block:1px solid var(--line-2)">
+  <div class="wrap">
+    <span class="eyebrow">الأمان</span>
+    <h2 class="sec-title">طبقات الحماية</h2>
+    <p class="sec-lead">منصة متعددة العملاء تعني أن العزل والأسرار ليسا اختياريين — هذه خط الأساس.</p>
+
+    <div class="sec-grid">
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div><h4>تشفير الأسرار</h4><p>مفاتيح Gemini وتوكنات واتساب مشفّرة في القاعدة، بلا أي تخزين بنص صريح.</p></div>
+      </div>
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 1.66-4 6-9 6s-9-4.34-9-6 4-6 9-6 9 4.34 9 6z"/></svg></div>
+        <div><h4>التحقق من الـ Webhook</h4><p>التحقق من توقيع <code style="font-family:var(--mono);font-size:12px;direction:ltr">X-Hub-Signature-256</code> ورمز الاشتراك قبل أي معالجة.</p></div>
+      </div>
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div><h4>عزل المستأجرين</h4><p>Global Scopes وسياسات وصول تمنع وصول أي عميل لبيانات عميل آخر (حماية من IDOR).</p></div>
+      </div>
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+        <div><h4>تحديد المعدّل</h4><p>Throttle لكل مستأجر على الـ API وعلى معدّل الرسائل لكل رقم، لمنع الإساءة والتكاليف المفاجئة.</p></div>
+      </div>
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>
+        <div><h4>مقاومة حقن الأوامر</h4><p>معاملة رسائل العملاء والمعرفة كمدخلات غير موثوقة، مع تحصين الـ system prompt وحدود واضحة للسياق.</p></div>
+      </div>
+      <div class="scard">
+        <div class="scard-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+        <div><h4>سجل التدقيق</h4><p>تسجيل إجراءات الإدارة الحساسة، وفرض HTTPS (SSL من Hostinger)، وصلاحيات ملفات صحيحة.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== ROADMAP ===================== -->
+<section>
+  <div class="wrap">
+    <span class="eyebrow">خارطة الطريق</span>
+    <h2 class="sec-title">مراحل التنفيذ</h2>
+    <p class="sec-lead">تسلسل عملي: بوت واحد يعمل أولاً، ثم التحويل إلى منصة متعددة العملاء، ثم التوسعة. التقديرات إرشادية لمطوّر واحد.</p>
+
+    <div class="road">
+      <div class="phase">
+        <div class="phase-rail"><div class="phase-dot">0</div><div class="phase-line"></div><div class="phase-when">١–٢ أسبوع</div></div>
+        <div class="phase-body">
+          <h4>الأساسات <span class="ms">Foundations</span></h4>
+          <p>إعداد Laravel، المصادقة عبر Sanctum، هيكل تعدد المستأجرين، المخطط الأساسي، والنشر على Hostinger.</p>
+          <div class="phase-tags"><span class="ptag">Laravel + Sanctum</span><span class="ptag">tenant scaffolding</span><span class="ptag">base schema</span><span class="ptag">deploy</span></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail"><div class="phase-dot">1</div><div class="phase-line"></div><div class="phase-when">٢–٣ أسابيع</div></div>
+        <div class="phase-body">
+          <h4>بوت واحد يعمل من الطرف للطرف <span class="ms">MVP</span></h4>
+          <p>webhook استقبال/إرسال واتساب، رقم واحد، تكامل Gemini Flash-Lite، system prompt + حقن المعرفة نصاً، رد متزامن، وتسجيل المحادثات.</p>
+          <div class="phase-tags"><span class="ptag">Cloud API webhook</span><span class="ptag">Gemini integration</span><span class="ptag">prompt + KB</span><span class="ptag">sync reply</span></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail"><div class="phase-dot">2</div><div class="phase-line"></div><div class="phase-when">٢–٣ أسابيع</div></div>
+        <div class="phase-body">
+          <h4>التحوّل إلى منصة SaaS <span class="ms">Multi-tenant</span></h4>
+          <p>تسجيل العملاء، إدارة المستخدمين والأدوار، إعداد بوت لكل عميل، إضافة المعرفة من اللوحة، ربط الرقم عبر Embedded Signup، وعدّادات الاستهلاك.</p>
+          <div class="phase-tags"><span class="ptag">onboarding</span><span class="ptag">roles</span><span class="ptag">per-tenant bot</span><span class="ptag">embedded signup</span><span class="ptag">usage</span></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail"><div class="phase-dot">3</div><div class="phase-line"></div><div class="phase-when">~٢ أسبوع</div></div>
+        <div class="phase-body">
+          <h4>الصقل والجاهزية <span class="ms">Hardening</span></h4>
+          <p>ترقية RAG اختيارية، لوحة تحليلات، اشتراكات وفوترة، تحديد المعدّل، تحصين أمني شامل، ومعالجة حالات الفشل والاحتياط.</p>
+          <div class="phase-tags"><span class="ptag">RAG option</span><span class="ptag">analytics</span><span class="ptag">billing</span><span class="ptag">rate limiting</span></div>
+        </div>
+      </div>
+
+      <div class="phase">
+        <div class="phase-rail"><div class="phase-dot">4</div><div class="phase-when">لاحقاً</div></div>
+        <div class="phase-body">
+          <h4>توسعات <span class="ms">Optional</span></h4>
+          <p>تطبيقات جوال أصلية (Android/iOS) على نفس الـ API، أزرار وقوائم تفاعلية، التحويل لموظف بشري، ودعم متعدد اللغات.</p>
+          <div class="phase-tags"><span class="ptag">native apps</span><span class="ptag">interactive replies</span><span class="ptag">human handoff</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COST CALCULATOR ===================== -->
+<section class="calc-band">
+  <div class="wrap">
+    <span class="eyebrow">حاسبة التكلفة</span>
+    <h2 class="sec-title">قدّر تكلفتك الشهرية</h2>
+    <p class="sec-lead">حرّك القيم لتقدير تكلفة Gemini الشهرية. تذكّر: ردود واتساب داخل نافذة الـ 24 ساعة مجانية، فالتكلفة الفعلية هي الذكاء + الاستضافة.</p>
+
+    <div class="calc">
+      <div class="calc-controls">
+        <h3>المُدخلات</h3>
+        <p class="hint">تقدير تشغيلي — عدّل حسب واقع عملائك.</p>
+
+        <div class="field">
+          <div class="field-top"><label>عدد العملاء (المستأجرين)</label><span class="val" id="v-clients">10</span></div>
+          <input type="range" id="clients" min="1" max="200" value="10" step="1">
+        </div>
+        <div class="field">
+          <div class="field-top"><label>محادثات/عميل يومياً</label><span class="val" id="v-convos">30</span></div>
+          <input type="range" id="convos" min="1" max="500" value="30" step="1">
+        </div>
+        <div class="field">
+          <div class="field-top"><label>ردود البوت/محادثة</label><span class="val" id="v-replies">3</span></div>
+          <input type="range" id="replies" min="1" max="20" value="3" step="1">
+        </div>
+        <div class="field">
+          <div class="field-top"><label>توكنز الإدخال/رد (سياق + معرفة)</label><span class="val" id="v-tin">1000</span></div>
+          <input type="range" id="tin" min="200" max="6000" value="1000" step="100">
+        </div>
+        <div class="field">
+          <div class="field-top"><label>توكنز الإخراج/رد</label><span class="val" id="v-tout">200</span></div>
+          <input type="range" id="tout" min="50" max="1500" value="200" step="50">
+        </div>
+        <div class="field">
+          <div class="field-top"><label>الاستضافة الشهرية (ثابت)</label><span class="val" id="v-host">$10</span></div>
+          <input type="range" id="host" min="0" max="60" value="10" step="1">
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <div class="field-top"><label>نموذج Flash-Lite</label></div>
+          <div class="model-sel">
+            <div class="model-opt active" data-in="0.10" data-out="0.40"><div class="mo-name">Gemini 2.5</div><div class="mo-price">$0.10 / $0.40</div></div>
+            <div class="model-opt" data-in="0.25" data-out="1.50"><div class="mo-name">Gemini 3.1</div><div class="mo-price">$0.25 / $1.50</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc-out">
+        <div class="out-total">
+          <div class="ol">إجمالي شهري تقديري</div>
+          <div class="ov"><span class="cur">$</span><span id="o-total">—</span></div>
+          <div class="osub" id="o-permsg">—</div>
+        </div>
+
+        <div class="out-rows">
+          <div class="orow"><div class="orl">تكلفة Gemini (إدخال + إخراج)<small id="o-tokens">— توكن/شهر</small></div><div class="orv" id="o-ai">—</div></div>
+          <div class="orow"><div class="orl">رسائل واتساب<small>ردود داخل نافذة الخدمة</small></div><div class="orv free">مجاناً</div></div>
+          <div class="orow"><div class="orl">الاستضافة<small>Hostinger — ثابت</small></div><div class="orv" id="o-host">—</div></div>
+          <div class="orow"><div class="orl">التكلفة لكل عميل<small>شهرياً</small></div><div class="orv" id="o-perclient">—</div></div>
+        </div>
+
+        <p class="out-note">
+          <b>ملاحظات:</b> الأسعار رسمية لكل مليون توكن (إدخال/إخراج). الوضع الافتراضي القياسي للرد الفوري؛ خصم الدفعات (Batch ~50%) يخص المهام غير الآنية فقط. لا تشمل الحاسبة الرسائل القالبية الصادرة (تسويق/إشعارات) إن استخدمتها، فلها تسعيرة منفصلة حسب الدولة.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SCALING + FOOTER ===================== -->
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <h3>متى تنتقل من الاستضافة المشتركة؟</h3>
+      <p>هذه المعمارية تخدم النسخة الأولى والأحجام المنخفضة–المتوسطة جيداً. عند ارتفاع حجم الرسائل المتزامن، أو الحاجة لطوابير حقيقية وWebSockets للوحة حية، انتقل إلى VPS. التصميم API-first والطوابير المجرَّدة والـ webhooks عديمة الحالة تجعل الانتقال <strong style="color:#fff">إعدادياً فقط</strong> (تبديل سائق الطابور، إضافة Horizon + Redis) — بلا إعادة كتابة.</p>
+    </div>
+    <div class="meta">
+      <div>WhatsApp AI Bot · SaaS Plan</div>
+      <div>Laravel 12 · Gemini Flash-Lite · Cloud API</div>
+      <div>وثيقة معمارية — قابلة للتطوير</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var $ = function(id){return document.getElementById(id);};
+  var model = {inp:0.10, out:0.40};
+
+  function setRangeFill(el){
+    var min = +el.min, max = +el.max, val = +el.value;
+    var p = ((val - min) / (max - min)) * 100;
+    el.style.setProperty('--p', p + '%');
+  }
+
+  function fmt(n){
+    if(n >= 1000) return n.toLocaleString('en-US');
+    if(n >= 100) return n.toFixed(0);
+    if(n >= 10) return n.toFixed(1);
+    if(n >= 1) return n.toFixed(2);
+    return n.toFixed(3);
+  }
+  function fmtTokens(n){
+    if(n >= 1e9) return (n/1e9).toFixed(2)+'B';
+    if(n >= 1e6) return (n/1e6).toFixed(1)+'M';
+    if(n >= 1e3) return (n/1e3).toFixed(0)+'K';
+    return n.toFixed(0);
+  }
+
+  function calc(){
+    var clients = +$('clients').value;
+    var convos  = +$('convos').value;
+    var replies = +$('replies').value;
+    var tin     = +$('tin').value;
+    var tout    = +$('tout').value;
+    var host    = +$('host').value;
+
+    $('v-clients').textContent = clients;
+    $('v-convos').textContent  = convos;
+    $('v-replies').textContent = replies;
+    $('v-tin').textContent     = tin;
+    $('v-tout').textContent    = tout;
+    $('v-host').textContent    = '$'+host;
+
+    var dailyReplies   = clients * convos * replies;
+    var monthlyReplies = dailyReplies * 30;
+    var inTokens  = monthlyReplies * tin;
+    var outTokens = monthlyReplies * tout;
+    var totalTokens = inTokens + outTokens;
+
+    var aiCost = (inTokens/1e6)*model.inp + (outTokens/1e6)*model.out;
+    var total  = aiCost + host;
+    var perClient = clients ? total/clients : 0;
+    var perMsg = monthlyReplies ? (aiCost/monthlyReplies) : 0;
+
+    $('o-total').textContent = fmt(total);
+    $('o-ai').textContent = '$'+fmt(aiCost);
+    $('o-host').textContent = '$'+host.toFixed(2);
+    $('o-perclient').textContent = '$'+fmt(perClient);
+    $('o-tokens').textContent = fmtTokens(totalTokens)+' توكن/شهر';
+    $('o-permsg').textContent = '≈ '+monthlyReplies.toLocaleString('en-US')+' رد/شهر · تكلفة الرد الواحد ≈ $'+perMsg.toFixed(4);
+  }
+
+  ['clients','convos','replies','tin','tout','host'].forEach(function(id){
+    var el = $(id);
+    setRangeFill(el);
+    el.addEventListener('input', function(){ setRangeFill(el); calc(); });
+  });
+
+  document.querySelectorAll('.model-opt').forEach(function(opt){
+    opt.addEventListener('click', function(){
+      document.querySelectorAll('.model-opt').forEach(function(o){o.classList.remove('active');});
+      opt.classList.add('active');
+      model.inp = parseFloat(opt.dataset.in);
+      model.out = parseFloat(opt.dataset.out);
+      calc();
+    });
+  });
+
+  calc();
+})();
+</script>
+
+</body>
+</html>
