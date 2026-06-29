@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Models\Tenant;
+use App\Models\User;
+use App\Models\WhatsappAccount;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /*
@@ -16,7 +21,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -48,4 +53,32 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Provision a tenant with an owner user and a WhatsApp account, mirroring the
+ * onboarding flow, then bind that tenant for the running test (so TenantScope
+ * filters to it). Returns the owner user.
+ *
+ * @param  array<string, mixed>  $accountAttributes
+ */
+function provisionTenant(array $accountAttributes = []): User
+{
+    $tenant = Tenant::factory()->create();
+
+    $context = app(TenantContext::class);
+    // Bind explicitly (not via run()) so the tenant stays bound for the rest of
+    // the test body and its assertions.
+    $context->set($tenant->id);
+
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'role' => 'owner',
+    ]);
+
+    WhatsappAccount::factory()->create(array_merge([
+        'tenant_id' => $tenant->id,
+    ], $accountAttributes));
+
+    return $user;
 }

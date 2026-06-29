@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -27,6 +28,11 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            // Every user belongs to a tenant (ADR-02). A fresh tenant by
+            // default keeps factory-made users valid for tenant-scoped routes;
+            // pass an explicit `tenant_id` (or null) to override.
+            'tenant_id' => Tenant::factory(),
+            'role' => 'owner',
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

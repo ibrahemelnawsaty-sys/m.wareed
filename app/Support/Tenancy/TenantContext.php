@@ -26,6 +26,13 @@ class TenantContext
      */
     public function set(int $id): void
     {
+        // Tenant primary keys start at 1; 0 (e.g. from a stray `(int) null`)
+        // is never a valid tenant. Reject it loudly instead of silently
+        // binding a phantom tenant and leaking across the isolation boundary.
+        if ($id < 1) {
+            throw new \InvalidArgumentException("Tenant id must be a positive integer; got {$id}.");
+        }
+
         $this->tenantId = $id;
     }
 
@@ -58,6 +65,10 @@ class TenantContext
      */
     public function run(int $id, \Closure $callback): mixed
     {
+        if ($id < 1) {
+            throw new \InvalidArgumentException("Tenant id must be a positive integer; got {$id}.");
+        }
+
         $previous = $this->tenantId;
         $this->tenantId = $id;
 
