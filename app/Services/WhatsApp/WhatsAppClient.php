@@ -53,6 +53,81 @@ class WhatsAppClient
     }
 
     /**
+     * Send an interactive List Message within the 24h window (Phase 7b, §11).
+     * The customer taps a row and Meta echoes its `id` back as a list_reply.
+     *
+     * Meta's list shape: one section ('خدماتنا') holding up to 10 rows, each
+     * `{id, title, description?}`. The header/footer are optional text blocks.
+     * Empty optional fields are OMITTED entirely (Meta rejects empty objects);
+     * each row's `description` is included only when non-empty for the same
+     * reason. Field-length limits are enforced by the FormRequest before a row
+     * is ever stored, so the rows handed in here are already within bounds.
+     *
+     * @param  list<array{id: string, title: string, description?: ?string}>  $rows
+     * @return array{wa_message_id: ?string}
+     *
+     * @throws RuntimeException when the Cloud API call fails
+     */
+    public function sendInteractiveList(
+        WhatsappAccount $account,
+        string $to,
+        ?string $header,
+        string $body,
+        string $buttonLabel,
+        ?string $footer,
+        array $rows,
+    ): array {
+        $sectionRows = [];
+
+        foreach ($rows as $row) {
+            $entry = [
+                'id' => $row['id'],
+                'title' => $row['title'],
+            ];
+
+            $description = $row['description'] ?? null;
+
+            if (is_string($description) && $description !== '') {
+                $entry['description'] = $description;
+            }
+
+            $sectionRows[] = $entry;
+        }
+
+        $interactive = [
+            'type' => 'list',
+            'body' => ['text' => $body],
+            'action' => [
+                'button' => $buttonLabel,
+                'sections' => [[
+                    'title' => 'خدماتنا',
+                    'rows' => $sectionRows,
+                ]],
+            ],
+        ];
+
+        if (is_string($header) && $header !== '') {
+            $interactive['header'] = ['type' => 'text', 'text' => $header];
+        }
+
+        if (is_string($footer) && $footer !== '') {
+            $interactive['footer'] = ['text' => $footer];
+        }
+
+        $response = $this->dispatch($account, 'interactive list send', fn (): Response => $this->authed($account)
+            ->asJson()
+            ->post($this->messagesUrl($account), [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $to,
+                'type' => 'interactive',
+                'interactive' => $interactive,
+            ]));
+
+        return $this->messageId($response);
+    }
+
+    /**
      * Send a pre-approved template message (works outside the 24h window, §11).
      * Reused by the connection wizard's test send and the templates phase.
      *

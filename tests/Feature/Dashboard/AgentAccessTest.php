@@ -36,6 +36,7 @@ test('an agent is blocked from owner-only account settings', function (string $r
 })->with([
     'whatsapp.edit',
     'bot.edit',
+    'menu.edit',
     'knowledge.index',
     'knowledge.create',
     'playground.index',
@@ -66,6 +67,7 @@ test('the owner still reaches every account setting', function (string $routeNam
 })->with([
     'whatsapp.edit',
     'bot.edit',
+    'menu.edit',
     'knowledge.index',
     'playground.index',
     'team.index',

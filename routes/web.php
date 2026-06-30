@@ -15,6 +15,7 @@ use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\KnowledgeDocumentController;
 use App\Http\Controllers\Dashboard\PlaygroundController;
+use App\Http\Controllers\Dashboard\ServiceMenuController;
 use App\Http\Controllers\Dashboard\TeamController;
 use App\Http\Controllers\Dashboard\WhatsappAccountController;
 use App\Http\Controllers\ProfileController;
@@ -95,6 +96,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         // Bot settings
         Route::get('/bot', [BotSettingsController::class, 'edit'])->name('bot.edit');
         Route::put('/bot', [BotSettingsController::class, 'update'])->name('bot.update');
+
+        // Interactive service menu (Phase 7b) — owner configures the WhatsApp
+        // List Message the bot offers customers. Single menu per tenant; rows are
+        // rebuilt server-side with generated keys. Meta limits enforced in the
+        // FormRequest. Owner-only (an agent gets 403 via the `owner` group).
+        Route::get('/menu', [ServiceMenuController::class, 'edit'])->name('menu.edit');
+        Route::put('/menu', [ServiceMenuController::class, 'update'])->name('menu.update');
 
         // Knowledge base
         Route::resource('knowledge', KnowledgeDocumentController::class)

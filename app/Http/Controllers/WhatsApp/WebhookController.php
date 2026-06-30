@@ -7,10 +7,13 @@ namespace App\Http\Controllers\WhatsApp;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\ServiceMenu;
+use App\Models\ServiceMenuRow;
 use App\Models\WhatsappAccount;
 use App\Services\AI\Contracts\BotReplyService;
 use App\Services\Inbox\ConversationRouter;
 use App\Services\Inbox\HandoffDetector;
+use App\Services\Inbox\MenuTriggerDetector;
 use App\Services\Inbox\OptOutDetector;
 use App\Services\WhatsApp\WhatsAppClient;
 use App\Support\Tenancy\TenantContext;
@@ -45,6 +48,7 @@ class WebhookController extends Controller
         private readonly HandoffDetector $handoff,
         private readonly OptOutDetector $optOut,
         private readonly ConversationRouter $router,
+        private readonly MenuTriggerDetector $menuTrigger,
     ) {}
 
     /**
@@ -161,9 +165,26 @@ class WebhookController extends Controller
             return;
         }
 
-        $incomingText = (string) (data_get($message, 'text.body') ?? '');
+        $type = (string) (data_get($message, 'type') ?? 'text');
+
+        // The id Meta echoes back when the customer taps a list row (null for a
+        // normal text message). It maps to exactly one ServiceMenuRow.
+        $listReplyId = data_get($message, 'interactive.list_reply.id');
+        $listReplyId = is_string($listReplyId) ? $listReplyId : null;
+
+        // The text we route on AND store as the visible body. For a list/button
+        // reply Meta sends no `text.body`; the human-readable label lives under
+        // interactive.{list_reply|button_reply}.title — use it so the inbox shows
+        // what the customer actually picked, not an empty bubble (§5).
+        $incomingText = (string) (data_get($message, 'text.body')
+            ?? data_get($message, 'interactive.list_reply.title')
+            ?? data_get($message, 'interactive.button_reply.title')
+            ?? '');
 
         $conversation = $this->resolveConversation($account, $from, $contactName);
+        // A brand-new conversation (first inbound message) — drives the optional
+        // welcome menu below. Captured before any further writes touch the row.
+        $isFirstMessage = $conversation->wasRecentlyCreated;
 
         // Persist the inbound message (direction='in'). createOrFirst is
         // race-safe: a concurrent duplicate delivery (Meta retry) that slips
@@ -175,7 +196,7 @@ class WebhookController extends Controller
             [
                 'conversation_id' => $conversation->id,
                 'direction' => 'in',
-                'type' => (string) (data_get($message, 'type') ?? 'text'),
+                'type' => $type,
                 'body' => $incomingText,
                 'status' => 'received',
             ],
@@ -210,6 +231,46 @@ class WebhookController extends Controller
             return;
         }
 
+        // The customer tapped a row of the interactive service menu (Phase 7b).
+        // Resolve it to its ServiceMenuRow (scoped to this tenant via TenantScope,
+        // so a foreign/forged id finds nothing) and act on the row's action:
+        //  - reply   → send the canned reply_text, stay on the bot.
+        //  - handoff → flip to a human and stop.
+        // Either way the AI is skipped, AND we deliberately DO NOT re-send the
+        // menu — a list reply must never trigger another list, which would loop
+        // the customer forever (§9). An unmatched id falls through to the safe
+        // default (AI) rather than going silent.
+        if ($listReplyId !== null) {
+            $row = ServiceMenuRow::query()->where('row_key', $listReplyId)->first();
+
+            if ($row !== null) {
+                $this->handleMenuSelection($account, $conversation, $from, $row);
+
+                return;
+            }
+        }
+
+        // Offer the interactive service menu (Phase 7b) when it is enabled and
+        // EITHER the customer asked for it, OR this is the first message of a new
+        // conversation and the menu is set to greet on welcome. Critically this
+        // is reached only when $listReplyId === null (a tapped row returned
+        // above), so the menu is NEVER sent in reply to a menu selection — no
+        // loop (§9). The window is open here (the customer just messaged us), so
+        // the list is a valid in-window service message. Sending it SKIPS the AI.
+        if ($listReplyId === null) {
+            $menu = ServiceMenu::query()->with('rows')->first();
+
+            if ($menu !== null && $menu->isEnabled() && $menu->rows->isNotEmpty()) {
+                $welcome = $isFirstMessage && $menu->trigger_on_welcome;
+
+                if ($welcome || $this->menuTrigger->wantsMenu($incomingText)) {
+                    $this->sendServiceMenu($account, $conversation, $from, $menu);
+
+                    return;
+                }
+            }
+        }
+
         // The customer is explicitly asking for a human. Flip to human mode,
         // send a single courtesy acknowledgement, and skip the AI entirely so
         // we never burn tokens once a handoff is requested (§11, §12).
@@ -235,6 +296,90 @@ class WebhookController extends Controller
                 'tokens_in' => $result->tokensIn,
                 'tokens_out' => $result->tokensOut,
                 'cost_micros' => $result->costMicros,
+                'status' => 'sent',
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Act on a tapped service-menu row (Phase 7b). A 'reply' row sends its canned
+     * text and keeps the bot in control; a 'handoff' row flips the conversation
+     * to a human (and auto-assigns in balanced mode), exactly like a typed
+     * handoff request. The AI is never invoked here, and the menu is never
+     * re-sent — preventing a list→list loop (§9). All sends are contained: a Meta
+     * failure is reported, never crashes the webhook (§3).
+     */
+    private function handleMenuSelection(WhatsappAccount $account, Conversation $conversation, string $from, ServiceMenuRow $row): void
+    {
+        if ($row->isHandoff()) {
+            $this->performHandoff($account, $conversation, $from);
+
+            return;
+        }
+
+        // 'reply' row: send the canned text as a bot reply (user_id null). An
+        // empty reply_text is guarded against at validation time, but stay safe.
+        $replyText = (string) ($row->reply_text ?? '');
+
+        if ($replyText === '') {
+            return;
+        }
+
+        try {
+            $sent = $this->client->sendText($account, $from, $replyText);
+
+            Message::query()->create([
+                'conversation_id' => $conversation->id,
+                'user_id' => null,
+                'wa_message_id' => $sent['wa_message_id'],
+                'direction' => 'out',
+                'type' => 'text',
+                'body' => $replyText,
+                'status' => 'sent',
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Send the interactive service-menu List Message and record a descriptive
+     * outbound row so the inbox shows that the menu was offered (§5). The menu's
+     * rows are mapped to Meta's `{id, title, description}` shape using the stable
+     * row_key as the reply id. Contained: a send failure is reported and never
+     * crashes the webhook (§3).
+     */
+    private function sendServiceMenu(WhatsappAccount $account, Conversation $conversation, string $from, ServiceMenu $menu): void
+    {
+        $rows = $menu->rows
+            ->map(fn (ServiceMenuRow $row): array => [
+                'id' => $row->row_key,
+                'title' => $row->title,
+                'description' => $row->description,
+            ])
+            ->values()
+            ->all();
+
+        try {
+            $sent = $this->client->sendInteractiveList(
+                $account,
+                $from,
+                $menu->header,
+                $menu->body,
+                $menu->button_label,
+                $menu->footer,
+                $rows,
+            );
+
+            Message::query()->create([
+                'conversation_id' => $conversation->id,
+                'user_id' => null,
+                'wa_message_id' => $sent['wa_message_id'],
+                'direction' => 'out',
+                'type' => 'interactive',
+                'body' => $menu->body,
                 'status' => 'sent',
             ]);
         } catch (Throwable $e) {
