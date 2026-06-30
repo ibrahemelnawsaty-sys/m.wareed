@@ -1,23 +1,82 @@
+@php
+    // Public site content (Phase 4h). Every field falls back to the current
+    // hard-coded copy as its default, so the page is intact even before the admin
+    // saves anything. The values are PUBLIC (not secrets) but still untrusted, so
+    // every one is printed escaped via {{ }} below (§13, no HTML injection).
+    $site = app(\App\Services\Settings\SiteSettings::class);
+
+    $brandName   = $site->get('brand_name', 'وريد');
+    $heroEyebrow = $site->get('hero_eyebrow', 'منصة SaaS · واتساب + ذكاء اصطناعي');
+    $heroTitle   = $site->get('hero_title', 'بوت واتساب ذكي يرد على عملائك تلقائياً، على مدار الساعة');
+    $heroSubtitle = $site->get('hero_subtitle', 'وريد منصة تربط رقم واتساب عملك ببوت ذكي يفهم عملاءك ويرد عليهم بأسلوب علامتك التجارية — مدعوماً بأقوى نماذج الذكاء الاصطناعي (Gemini · ChatGPT · DeepSeek)، مع لوحة تحكم كاملة وتحليلات.');
+    $heroCta     = $site->get('hero_cta', 'ابدأ مجاناً — أنشئ حسابك');
+    $announcement = $site->get('announcement');
+
+    $contactEmail   = $site->get('contact_email', 'info@m.wareed.vip');
+    $contactPhone   = $site->get('contact_phone');
+    $contactAddress = $site->get('contact_address');
+
+    $seoTitle       = $site->get('seo_title', 'وريد — بوتات واتساب الذكية لأعمالك | رد آلي بالذكاء الاصطناعي');
+    $seoDescription = $site->get('seo_description', 'منصة وريد: اربط رقم واتساب عملك واترك بوتاً ذكياً يرد على عملائك آلياً عبر الذكاء الاصطناعي (Gemini · ChatGPT · DeepSeek) — على مدار الساعة، بأسلوب علامتك التجارية.');
+    $seoKeywords    = $site->get('seo_keywords', 'بوت واتساب, واتساب ذكاء اصطناعي, رد آلي واتساب, خدمة عملاء آلية, شات بوت, وريد');
+
+    $isProduction = app()->environment('production');
+    $appUrl = rtrim(config('app.url'), '/').'/';
+
+    // JSON-LD: built as a PHP array and emitted via json_encode so every value is
+    // safely encoded — no raw interpolation into the <script> (§13).
+    $jsonLd = [
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                'name' => $brandName,
+                'url' => $appUrl,
+                'email' => $contactEmail,
+                'description' => $seoDescription,
+            ],
+            [
+                '@type' => 'WebSite',
+                'name' => $brandName,
+                'url' => $appUrl,
+                'inLanguage' => 'ar',
+            ],
+        ],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>وريد — بوتات واتساب الذكية لأعمالك | رد آلي بالذكاء الاصطناعي</title>
-    <meta name="description" content="منصة وريد: اربط رقم واتساب عملك واترك بوتاً ذكياً يرد على عملائك آلياً عبر الذكاء الاصطناعي (Gemini · ChatGPT · DeepSeek) — على مدار الساعة، بأسلوب علامتك التجارية.">
-    <meta name="keywords" content="بوت واتساب, واتساب ذكاء اصطناعي, رد آلي واتساب, خدمة عملاء آلية, شات بوت, وريد">
-    <meta property="og:title" content="وريد — بوتات واتساب الذكية لأعمالك">
-    <meta property="og:description" content="بوت واتساب ذكي يرد على عملائك تلقائياً على مدار الساعة.">
+    <title>{{ $seoTitle }}</title>
+    <meta name="description" content="{{ $seoDescription }}">
+    <meta name="keywords" content="{{ $seoKeywords }}">
+    {{-- Indexing is allowed in PRODUCTION ONLY; every other environment is noindex (§11). --}}
+    <meta name="robots" content="{{ $isProduction ? 'index,follow' : 'noindex,nofollow' }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDescription }}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://m.wareed.vip/">
+    <meta property="og:url" content="{{ $appUrl }}">
     <meta property="og:locale" content="ar_AR">
-    <link rel="canonical" href="https://m.wareed.vip/">
+    <link rel="canonical" href="{{ $appUrl }}">
+    {{-- JSON-LD structured data (schema.org). json_encode escapes every value safely (§13). --}}
+    <script type="application/ld+json">
+        {!! json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-paper font-sans text-ink antialiased">
+
+@if (filled($announcement))
+    {{-- Optional top announcement banner — only rendered when the admin sets it. Escaped (§13). --}}
+    <div class="bg-night px-4 py-2.5 text-center text-sm font-medium text-signal">
+        {{ $announcement }}
+    </div>
+@endif
 
 @php
     $homeRoute = auth()->check()
@@ -32,7 +91,7 @@
             <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald/10 text-emerald">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5l1.2-3.6A8.25 8.25 0 1 1 7.5 21Z"/></svg>
             </span>
-            وريد
+            {{ $brandName }}
         </a>
         <nav class="hidden items-center gap-7 text-sm font-medium text-ink-2 md:flex">
             <a href="#features" class="transition hover:text-emerald">المزايا</a>
@@ -60,21 +119,19 @@
     <div class="relative mx-auto max-w-6xl px-5 py-20 text-center sm:py-28">
         <span class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-signal">
             <span class="h-2 w-2 animate-pulse rounded-full bg-signal"></span>
-            منصة SaaS · واتساب + ذكاء اصطناعي
+            {{ $heroEyebrow }}
         </span>
         <h1 class="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-[1.15] tracking-tight sm:text-5xl md:text-6xl">
-            بوت واتساب ذكي يرد على عملائك<br>
-            <span class="text-signal">تلقائياً، على مدار الساعة</span>
+            {{ $heroTitle }}
         </h1>
         <p class="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
-            وريد منصة تربط رقم واتساب عملك ببوت ذكي يفهم عملاءك ويرد عليهم بأسلوب علامتك التجارية —
-            مدعوماً بأقوى نماذج الذكاء الاصطناعي (Gemini · ChatGPT · DeepSeek)، مع لوحة تحكم كاملة وتحليلات.
+            {{ $heroSubtitle }}
         </p>
         <div class="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             @auth
                 <a href="{{ $homeRoute }}" class="w-full rounded-xl bg-emerald px-7 py-3.5 text-center font-semibold text-white shadow-luxe transition hover:bg-emerald-deep sm:w-auto">اذهب إلى لوحة التحكم</a>
             @else
-                <a href="{{ route('register') }}" class="w-full rounded-xl bg-emerald px-7 py-3.5 text-center font-semibold text-white shadow-luxe transition hover:bg-emerald-deep sm:w-auto">ابدأ مجاناً — أنشئ حسابك</a>
+                <a href="{{ route('register') }}" class="w-full rounded-xl bg-emerald px-7 py-3.5 text-center font-semibold text-white shadow-luxe transition hover:bg-emerald-deep sm:w-auto">{{ $heroCta }}</a>
                 <a href="#how" class="w-full rounded-xl border border-white/15 px-7 py-3.5 text-center font-semibold text-white/90 transition hover:bg-white/5 sm:w-auto">كيف يعمل؟</a>
             @endauth
         </div>
@@ -233,9 +290,21 @@
                     <span class="grid h-9 w-9 place-items-center rounded-xl bg-emerald/10 text-emerald">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5l1.2-3.6A8.25 8.25 0 1 1 7.5 21Z"/></svg>
                     </span>
-                    وريد
+                    {{ $brandName }}
                 </div>
                 <p class="mt-3 text-sm leading-relaxed text-ink-soft">منصة بوتات واتساب الذكية للأعمال — رد آلي بالذكاء الاصطناعي على مدار الساعة، بأسلوب علامتك التجارية.</p>
+                @if (filled($contactPhone) || filled($contactAddress))
+                    <div class="mt-4 space-y-1 text-sm text-ink-2">
+                        @if (filled($contactPhone))
+                            <div class="flex items-center gap-2" dir="ltr">
+                                <span class="font-mono text-xs text-ink-soft">{{ $contactPhone }}</span>
+                            </div>
+                        @endif
+                        @if (filled($contactAddress))
+                            <div class="text-ink-soft">{{ $contactAddress }}</div>
+                        @endif
+                    </div>
+                @endif
             </div>
             <div class="grid grid-cols-2 gap-8 text-sm sm:gap-14">
                 <div>
@@ -251,14 +320,14 @@
                     <ul class="mt-3 space-y-2 text-ink-2">
                         <li><a href="{{ route('login') }}" class="transition hover:text-emerald">تسجيل الدخول</a></li>
                         <li><a href="{{ route('register') }}" class="transition hover:text-emerald">إنشاء حساب</a></li>
-                        <li><a href="mailto:info@m.wareed.vip" class="transition hover:text-emerald">تواصل معنا</a></li>
+                        <li><a href="mailto:{{ $contactEmail }}" class="transition hover:text-emerald">تواصل معنا</a></li>
                     </ul>
                 </div>
             </div>
         </div>
         <div class="mt-10 flex flex-col items-center justify-between gap-3 border-t border-ink/10 pt-6 text-xs text-ink-soft sm:flex-row">
-            <span>© {{ date('Y') }} وريد. جميع الحقوق محفوظة.</span>
-            <span class="font-mono">m.wareed.vip · info@m.wareed.vip</span>
+            <span>© {{ date('Y') }} {{ $brandName }}. جميع الحقوق محفوظة.</span>
+            <span class="font-mono">{{ $contactEmail }}</span>
         </div>
     </div>
 </footer>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AnalyticsController as AdminAnalyticsController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SiteController as AdminSiteController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\BotSettingsController;
 use App\Http\Controllers\Dashboard\ConversationController;
@@ -14,11 +15,23 @@ use App\Http\Controllers\Dashboard\KnowledgeDocumentController;
 use App\Http\Controllers\Dashboard\PlaygroundController;
 use App\Http\Controllers\Dashboard\WhatsappAccountController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public SEO endpoints (§11)
+|--------------------------------------------------------------------------
+| Unauthenticated, read-only. robots.txt allows indexing in PRODUCTION ONLY;
+| every other environment returns Disallow: / so staging/preview is never
+| indexed (§11). The sitemap lists only public marketing/auth pages.
+*/
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('robots');
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +130,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // field on update keeps the stored key (non-destructive, §3, §13).
     Route::get('/settings', [AdminSettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+
+    // Public site content (landing-page copy + SEO metadata, Phase 4h). Unlike
+    // the AI keys above these are PUBLIC copy, not secrets, so the edit page
+    // renders the live values for editing. CSRF + FormRequest; a blank field
+    // reverts that field to its hard-coded landing default (§3).
+    Route::get('/site', [AdminSiteController::class, 'edit'])->name('site.edit');
+    Route::put('/site', [AdminSiteController::class, 'update'])->name('site.update');
 });
 
 require __DIR__.'/auth.php';

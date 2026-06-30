@@ -23,5 +23,8 @@ return [
 
         // Platform AI keys settings.
         'settings-updated' => 'تم حفظ مفاتيح مزوّدي الذكاء الاصطناعي بنجاح.',
+
+        // Public site content (landing page + SEO).
+        'site-updated' => 'تم حفظ محتوى الموقع بنجاح.',
     ],
 ];
