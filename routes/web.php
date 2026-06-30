@@ -87,6 +87,10 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         // WhatsApp connection (single account per tenant)
         Route::get('/whatsapp', [WhatsappAccountController::class, 'edit'])->name('whatsapp.edit');
         Route::put('/whatsapp', [WhatsappAccountController::class, 'update'])->name('whatsapp.update');
+        // Connection wizard (Phase 7a): probe Meta for live status, then send a
+        // pre-approved hello_world template to confirm the link end-to-end (§10).
+        Route::post('/whatsapp/verify', [WhatsappAccountController::class, 'verify'])->name('whatsapp.verify');
+        Route::post('/whatsapp/test', [WhatsappAccountController::class, 'test'])->name('whatsapp.test');
 
         // Bot settings
         Route::get('/bot', [BotSettingsController::class, 'edit'])->name('bot.edit');
