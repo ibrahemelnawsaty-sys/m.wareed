@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\WhatsappAccount;
 use App\Services\AI\Contracts\BotReplyService;
+use App\Services\Inbox\ConversationRouter;
 use App\Services\Inbox\HandoffDetector;
 use App\Services\WhatsApp\WhatsAppClient;
 use App\Support\Tenancy\TenantContext;
@@ -41,6 +42,7 @@ class WebhookController extends Controller
         private readonly BotReplyService $botReply,
         private readonly WhatsAppClient $client,
         private readonly HandoffDetector $handoff,
+        private readonly ConversationRouter $router,
     ) {}
 
     /**
@@ -232,10 +234,27 @@ class WebhookController extends Controller
      * Hand the conversation to the human queue and send one courtesy message.
      * The mode flip persists even if the send fails; the failure is reported
      * and contained so the webhook never crashes (§3).
+     *
+     * In BALANCED distribution mode the conversation is then auto-assigned to the
+     * least-loaded agent under their target (Phase 6c). In CLAIM mode it stays
+     * unassigned for any agent to pick up (Phase 6b behaviour, unchanged). The
+     * routing is contained: any failure is reported and the conversation simply
+     * stays queued — it never crashes the webhook or blocks the courtesy send.
      */
     private function performHandoff(WhatsappAccount $account, Conversation $conversation, string $from): void
     {
         $conversation->handoffToHumans();
+
+        // Balanced mode: route to the least-loaded eligible agent. Contained so a
+        // routing hiccup leaves the thread unassigned (still recoverable from the
+        // inbox), never breaks the handoff (§3). `tenant` is the bound tenant.
+        if ($account->tenant?->isBalancedMode()) {
+            try {
+                $this->router->assignBestAgent($conversation);
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
 
         try {
             $sent = $this->client->sendText($account, $from, self::HANDOFF_ACK);

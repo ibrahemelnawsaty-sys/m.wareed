@@ -25,6 +25,8 @@ return [
         // Tenant team management (owner).
         'team-member-added' => 'تمت إضافة الموظف إلى الفريق بنجاح.',
         'team-member-removed' => 'تمت إزالة الموظف من الفريق بنجاح.',
+        'team-distribution-updated' => 'تم حفظ إعدادات توزيع المحادثات بنجاح.',
+        'team-quota-updated' => 'تم تحديث تارجت الموظف بنجاح.',
 
         // Platform AI keys settings.
         'settings-updated' => 'تم حفظ مفاتيح مزوّدي الذكاء الاصطناعي بنجاح.',

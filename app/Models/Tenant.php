@@ -9,11 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 
 /**
  * @property string $status
  * @property Carbon|null $subscription_ends_at
  * @property int $max_users
+ * @property string $distribution_mode
+ * @property int $agent_conversation_quota
  */
 class Tenant extends Model
 {
@@ -34,10 +37,12 @@ class Tenant extends Model
     ];
 
     /**
-     * `subscription_ends_at` and `max_users` are intentionally NOT in $fillable:
-     * they are written only by trusted admin logic (see the management methods
-     * below), never from raw user input — a self-extended subscription or a
-     * self-raised seat limit is a §13 violation.
+     * `subscription_ends_at`, `max_users`, `distribution_mode`, and
+     * `agent_conversation_quota` are intentionally NOT in $fillable: they are
+     * written only by trusted admin/owner logic (see the management methods
+     * below), never from raw user input — a self-extended subscription, a
+     * self-raised seat limit, or a silently-flipped routing mode is a §13
+     * violation.
      *
      * @return array<string, string>
      */
@@ -46,6 +51,8 @@ class Tenant extends Model
         return [
             'subscription_ends_at' => 'datetime',
             'max_users' => 'integer',
+            'distribution_mode' => 'string',
+            'agent_conversation_quota' => 'integer',
         ];
     }
 
@@ -121,6 +128,39 @@ class Tenant extends Model
     public function setMaxUsers(int $n): void
     {
         $this->max_users = $n;
+        $this->save();
+    }
+
+    /**
+     * Whether this tenant routes handed-off conversations in "balanced" mode:
+     * each new handoff is auto-assigned to the least-loaded agent still under
+     * their target, instead of sitting unassigned for any agent to claim.
+     */
+    public function isBalancedMode(): bool
+    {
+        return $this->distribution_mode === 'balanced';
+    }
+
+    /**
+     * Set the conversation distribution mode and the default per-agent target.
+     * OWNER-ONLY: called from the team panel via save() on FormRequest-validated
+     * values — never mass assignment, so `distribution_mode` /
+     * `agent_conversation_quota` stay out of $fillable and cannot be smuggled
+     * through request input (§13). Guards the inputs defensively even though the
+     * FormRequest already validates them.
+     */
+    public function setDistribution(string $mode, int $quota): void
+    {
+        if (! in_array($mode, ['claim', 'balanced'], true)) {
+            throw new InvalidArgumentException("Unknown distribution mode: {$mode}");
+        }
+
+        if ($quota < 1) {
+            throw new InvalidArgumentException('Agent conversation quota must be at least 1.');
+        }
+
+        $this->distribution_mode = $mode;
+        $this->agent_conversation_quota = $quota;
         $this->save();
     }
 

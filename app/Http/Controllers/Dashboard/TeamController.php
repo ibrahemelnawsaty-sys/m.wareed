@@ -6,6 +6,9 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreTeamMemberRequest;
+use App\Http\Requests\Dashboard\UpdateAgentQuotaRequest;
+use App\Http\Requests\Dashboard\UpdateDistributionRequest;
+use App\Models\Conversation;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
@@ -35,12 +38,72 @@ class TeamController extends Controller
 
         $members = User::query()->oldest()->get();
 
+        // Per-agent open-conversation load in ONE aggregate (no query per row,
+        // §14): human-mode, assigned conversations grouped by agent. Runs through
+        // the TenantScope so it counts only this tenant's threads (§1).
+        /** @var array<int, int> $loads keyed by user id */
+        $loads = Conversation::query()
+            ->humanMode()
+            ->whereNotNull('assigned_to_user_id')
+            ->selectRaw('assigned_to_user_id, COUNT(*) as open_count')
+            ->groupBy('assigned_to_user_id')
+            ->pluck('open_count', 'assigned_to_user_id')
+            ->map(fn ($count): int => (int) $count)
+            ->all();
+
         return view('dashboard.team.index', [
             'members' => $members,
             'seatsUsed' => $tenant->seatsUsed(),
             'maxUsers' => $tenant->max_users,
             'canAddUser' => $tenant->canAddUser(),
+            'distributionMode' => $tenant->distribution_mode,
+            'defaultQuota' => $tenant->agent_conversation_quota,
+            'loads' => $loads,
         ]);
+    }
+
+    /**
+     * Set the tenant's conversation distribution mode + default per-agent target
+     * (Phase 6c). OWNER-ONLY (route's `owner` gate). Applied via the trusted
+     * Tenant::setDistribution (save() on FormRequest-validated values), never
+     * mass assignment — `distribution_mode`/`agent_conversation_quota` stay out
+     * of $fillable, so the mode can never be smuggled through input (§13).
+     */
+    public function updateDistribution(UpdateDistributionRequest $request): RedirectResponse
+    {
+        $this->currentTenant()->setDistribution(
+            (string) $request->validated('distribution_mode'),
+            (int) $request->validated('agent_conversation_quota'),
+        );
+
+        return redirect()
+            ->route('team.index')
+            ->with('status', 'team-distribution-updated');
+    }
+
+    /**
+     * Set (or clear) one agent's per-agent conversation target. OWNER-ONLY.
+     * $user is route-model bound through the TenantScope, so a foreign user 404s
+     * (IDOR, §1). A blank value clears the override (inherit the tenant default).
+     * The owner has no target (exempt), so setting one on the owner is rejected
+     * gently rather than silently stored (§3). Applied via the trusted
+     * User::setConversationQuota (forceFill+save), never mass assignment (§13).
+     */
+    public function updateAgentQuota(UpdateAgentQuotaRequest $request, User $user): RedirectResponse
+    {
+        if ($user->isOwner()) {
+            return redirect()
+                ->route('team.index')
+                ->withErrors(['team' => 'المالك معفى من سقف المحادثات؛ لا يُضبط له تارجت.']);
+        }
+
+        $quota = $request->validated('conversation_quota');
+
+        $user->setConversationQuota($quota === null ? null : (int) $quota);
+
+        return redirect()
+            ->route('team.index')
+            ->with('status', 'team-quota-updated');
     }
 
     /**

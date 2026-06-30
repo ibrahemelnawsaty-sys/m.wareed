@@ -107,6 +107,13 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         // ceiling. destroy's {user} resolves through TenantScope (foreign → 404).
         Route::get('/team', [TeamController::class, 'index'])->name('team.index');
         Route::post('/team', [TeamController::class, 'store'])->name('team.store');
+        // Conversation distribution settings (Phase 6c): the mode + default
+        // per-agent target, then a per-agent target override. All owner-only;
+        // {user} resolves through TenantScope (foreign → 404). The static
+        // `/team/distribution` is declared before `/team/{user}/quota` so it is
+        // never captured by the {user} wildcard.
+        Route::put('/team/distribution', [TeamController::class, 'updateDistribution'])->name('team.distribution');
+        Route::put('/team/{user}/quota', [TeamController::class, 'updateAgentQuota'])->name('team.quota');
         Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
     });
 });

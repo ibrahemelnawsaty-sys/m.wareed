@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\ReplyMessageRequest;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Services\Inbox\ConversationRouter;
 use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
@@ -26,7 +27,10 @@ use RuntimeException;
  */
 class InboxController extends Controller
 {
-    public function __construct(private readonly WhatsAppClient $client) {}
+    public function __construct(
+        private readonly WhatsAppClient $client,
+        private readonly ConversationRouter $router,
+    ) {}
 
     /**
      * List the tenant's conversations with inbox filters. `latestMessage` and
@@ -144,15 +148,25 @@ class InboxController extends Controller
             ]);
         }
 
-        // Unassigned: claim it atomically before sending. claimBy() runs an
-        // UPDATE ... WHERE assigned_to_user_id IS NULL, so if another agent won
-        // the race a microsecond earlier it returns false — and we must STOP
-        // here rather than send a second, conflicting reply to the same customer
-        // on a conversation that is now theirs (§13 no race on assignment, §3
-        // the final output must not collide). Honouring the return value is the
-        // whole point of the atomic claim.
+        // Unassigned: replying takes ownership, so claim it through the router —
+        // ONE atomic, capacity-aware, race-safe step (Phase 6c). It enforces the
+        // agent's target against the live committed load under a row lock (the
+        // OWNER is exempt) AND wins the conversation only while still unassigned,
+        // so neither two agents answering the same customer nor one agent
+        // overshooting their target is possible under concurrency (§13, §3).
+        // Already-assigned-to-me conversations skip this — the agent keeps
+        // answering their own thread (and the owner can answer any, via the
+        // authorization check above).
         if (! $conversation->isAssigned()) {
-            if (! $conversation->claimBy($user)) {
+            $outcome = $this->router->claimFor($conversation, $user);
+
+            if ($outcome === 'full') {
+                return back()->withErrors([
+                    'reply' => "بلغت سقف محادثاتك المفتوحة ({$user->conversationQuota()}). أنهِ محادثة أو أعِدها للبوت أولاً.",
+                ]);
+            }
+
+            if ($outcome === 'taken') {
                 return back()->withErrors([
                     'reply' => 'تم استلام هذه المحادثة من موظف آخر للتو.',
                 ]);
@@ -190,16 +204,25 @@ class InboxController extends Controller
     /**
      * Claim an unassigned conversation for the current agent. If another agent
      * won the race, surface a gentle error rather than silently overwriting.
+     *
+     * Capacity guard (balanced mode, Phase 6c): an agent already at their open-
+     * conversation target cannot take another — they must finish or release one
+     * first. The OWNER is exempt (supervisor/overflow) via
+     * isAtConversationCapacity().
      */
     public function claim(Conversation $conversation, Request $request): RedirectResponse
     {
-        if ($conversation->claimBy($request->user())) {
-            return back()->with('status', 'inbox-claimed');
-        }
+        $user = $request->user();
 
-        return back()->withErrors([
-            'reply' => 'تم استلام هذه المحادثة من موظف آخر.',
-        ]);
+        return match ($this->router->claimFor($conversation, $user)) {
+            'claimed' => back()->with('status', 'inbox-claimed'),
+            'full' => back()->withErrors([
+                'reply' => "بلغت سقف محادثاتك المفتوحة ({$user->conversationQuota()}). أنهِ محادثة أو أعِدها للبوت أولاً.",
+            ]),
+            default => back()->withErrors([
+                'reply' => 'تم استلام هذه المحادثة من موظف آخر.',
+            ]),
+        };
     }
 
     /**
