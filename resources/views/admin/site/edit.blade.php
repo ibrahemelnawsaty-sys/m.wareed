@@ -118,6 +118,113 @@
                 </div>
             </x-card>
 
+            {{-- ===== Features (#features) ===== --}}
+            @php
+                // Seed the Alpine repeater from old() after a failed submit, else
+                // from the live/default rows the controller passed. Coerce to a
+                // clean {title, description} list so the JS data is well-shaped.
+                $featuresSeed = collect(old('features', $features))
+                    ->map(fn ($row) => [
+                        'title' => is_array($row) ? (string) ($row['title'] ?? '') : '',
+                        'description' => is_array($row) ? (string) ($row['description'] ?? '') : '',
+                    ])
+                    ->values()
+                    ->all();
+            @endphp
+            <x-card title="المزايا (شبكة الصفحة الرئيسية)" subtitle="بطاقات المزايا تحت الهيرو. الأيقونات ثابتة بالترتيب — تحرّر النص فقط. حتى 8 مزايا.">
+                <div x-data="{
+                        rows: @js($featuresSeed),
+                        max: 8,
+                        add() { if (this.rows.length < this.max) this.rows.push({ title: '', description: '' }); },
+                        remove(i) { this.rows.splice(i, 1); },
+                     }"
+                     class="space-y-4">
+                    <template x-for="(row, i) in rows" :key="i">
+                        <div class="rounded-2xl border border-ink/10 bg-paper p-4">
+                            <div class="mb-2 flex items-center justify-between">
+                                <span class="font-mono text-xs font-semibold text-ink-soft">ميزة <span x-text="i + 1"></span></span>
+                                <button type="button" @click="remove(i)" class="rounded-lg px-2 py-1 text-xs font-medium text-[#B5462F] transition hover:bg-[#B5462F]/10">حذف</button>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-ink-2">العنوان</label>
+                                    <input type="text" maxlength="80" x-model="row.title" :name="`features[${i}][title]`"
+                                        class="block w-full rounded-xl border-ink/15 bg-white text-ink shadow-sm transition placeholder:text-ink-soft/60 focus:border-emerald focus:ring-emerald/30" />
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-ink-2">الوصف</label>
+                                    <textarea rows="2" maxlength="240" x-model="row.description" :name="`features[${i}][description]`"
+                                        class="block w-full rounded-xl border-ink/15 bg-white text-ink shadow-sm transition placeholder:text-ink-soft/60 focus:border-emerald focus:ring-emerald/30"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <p x-show="rows.length === 0" class="rounded-xl border border-dashed border-ink/15 px-4 py-6 text-center text-sm text-ink-soft">
+                        لا توجد مزايا — احفظ الآن لإظهار المزايا الافتراضية، أو أضف ميزة.
+                    </p>
+
+                    <button type="button" @click="add()" :disabled="rows.length >= max"
+                        class="inline-flex items-center gap-1.5 rounded-xl border border-emerald/30 bg-emerald/5 px-4 py-2 text-sm font-semibold text-emerald transition hover:bg-emerald/10 disabled:cursor-not-allowed disabled:opacity-50">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        إضافة ميزة
+                        <span class="font-mono text-xs text-ink-soft">(<span x-text="rows.length"></span>/8)</span>
+                    </button>
+                </div>
+            </x-card>
+
+            {{-- ===== FAQ (#faq) ===== --}}
+            @php
+                $faqSeed = collect(old('faq', $faq))
+                    ->map(fn ($row) => [
+                        'question' => is_array($row) ? (string) ($row['question'] ?? '') : '',
+                        'answer' => is_array($row) ? (string) ($row['answer'] ?? '') : '',
+                    ])
+                    ->values()
+                    ->all();
+            @endphp
+            <x-card title="الأسئلة الشائعة" subtitle="عناصر قسم الأسئلة الشائعة في الصفحة الرئيسية. حتى 12 سؤالاً.">
+                <div x-data="{
+                        rows: @js($faqSeed),
+                        max: 12,
+                        add() { if (this.rows.length < this.max) this.rows.push({ question: '', answer: '' }); },
+                        remove(i) { this.rows.splice(i, 1); },
+                     }"
+                     class="space-y-4">
+                    <template x-for="(row, i) in rows" :key="i">
+                        <div class="rounded-2xl border border-ink/10 bg-paper p-4">
+                            <div class="mb-2 flex items-center justify-between">
+                                <span class="font-mono text-xs font-semibold text-ink-soft">سؤال <span x-text="i + 1"></span></span>
+                                <button type="button" @click="remove(i)" class="rounded-lg px-2 py-1 text-xs font-medium text-[#B5462F] transition hover:bg-[#B5462F]/10">حذف</button>
+                            </div>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-ink-2">السؤال</label>
+                                    <input type="text" maxlength="140" x-model="row.question" :name="`faq[${i}][question]`"
+                                        class="block w-full rounded-xl border-ink/15 bg-white text-ink shadow-sm transition placeholder:text-ink-soft/60 focus:border-emerald focus:ring-emerald/30" />
+                                </div>
+                                <div>
+                                    <label class="mb-1.5 block text-sm font-medium text-ink-2">الإجابة</label>
+                                    <textarea rows="3" maxlength="600" x-model="row.answer" :name="`faq[${i}][answer]`"
+                                        class="block w-full rounded-xl border-ink/15 bg-white text-ink shadow-sm transition placeholder:text-ink-soft/60 focus:border-emerald focus:ring-emerald/30"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <p x-show="rows.length === 0" class="rounded-xl border border-dashed border-ink/15 px-4 py-6 text-center text-sm text-ink-soft">
+                        لا توجد أسئلة — احفظ الآن لإظهار الأسئلة الافتراضية، أو أضف سؤالاً.
+                    </p>
+
+                    <button type="button" @click="add()" :disabled="rows.length >= max"
+                        class="inline-flex items-center gap-1.5 rounded-xl border border-emerald/30 bg-emerald/5 px-4 py-2 text-sm font-semibold text-emerald transition hover:bg-emerald/10 disabled:cursor-not-allowed disabled:opacity-50">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        إضافة سؤال
+                        <span class="font-mono text-xs text-ink-soft">(<span x-text="rows.length"></span>/12)</span>
+                    </button>
+                </div>
+            </x-card>
+
             {{-- ===== Announcement ===== --}}
             <x-card title="شريط الإعلان العلوي" subtitle="يظهر شريط أعلى الصفحة الرئيسية إن كتبت نصاً هنا — اتركه فارغاً لإخفائه.">
                 <div>

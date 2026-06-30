@@ -44,6 +44,34 @@ class SiteController extends Controller
         'seo_keywords',
     ];
 
+    /**
+     * Default rows the editor is seeded with before anything is saved, mirroring
+     * the landing page's hard-coded copy so the admin edits the live text rather
+     * than an empty form. The landing page keeps its own copy of these defaults
+     * (it must render standalone); these are only the editor's starting point.
+     *
+     * @var list<array{title: string, description: string}>
+     */
+    private const FEATURES_DEFAULT = [
+        ['title' => 'رد آلي ذكي', 'description' => 'يرد البوت على استفسارات عملائك فوراً بأسلوب عملك، داخل نافذة واتساب الرسمية — دون انتظار.'],
+        ['title' => 'قاعدة معرفة خاصة', 'description' => 'أضف منتجاتك وسياساتك وأسئلتك الشائعة، فيرد البوت بمعلومات عملك أنت تحديداً، لا إجابات عامة.'],
+        ['title' => 'تعدد نماذج الذكاء', 'description' => 'اختر النموذج الأنسب: Gemini أو ChatGPT أو DeepSeek — وبدّل بينها في أي وقت دون تغيير شيء.'],
+        ['title' => 'لوحة تحكم وتحليلات', 'description' => 'تابع المحادثات والاستهلاك والتكلفة لحظياً من لوحة عربية أنيقة وسهلة على الجوال والحاسب.'],
+        ['title' => 'مختبر تجربة فوري', 'description' => 'جرّب بوتك حيّاً قبل ربط الرقم — اكتب رسالة وشاهد الرد لحظياً للتأكد من جودته.'],
+        ['title' => 'أمان وعزل تام', 'description' => 'بيانات كل عميل معزولة ومشفّرة بالكامل، عبر واتساب Cloud API الرسمي من Meta — بأعلى معايير الأمان.'],
+    ];
+
+    /**
+     * @var list<array{question: string, answer: string}>
+     */
+    private const FAQ_DEFAULT = [
+        ['question' => 'هل أحتاج خبرة تقنية؟', 'answer' => 'لا إطلاقاً. كل شيء يُدار من لوحة تحكم عربية بسيطة — تسجّل، تربط رقمك، وتضيف معلوماتك بخطوات واضحة.'],
+        ['question' => 'هل يستخدم رقم واتساب الخاص بي؟', 'answer' => 'نعم. يرد البوت من رقم عملك أنت عبر واتساب Cloud API الرسمي من Meta — لا أرقام مشتركة.'],
+        ['question' => 'هل بياناتي آمنة؟', 'answer' => 'بالكامل. بيانات كل عميل معزولة ومشفّرة، والمفاتيح محمية، ولا يصل أحد لبيانات عمل آخر.'],
+        ['question' => 'كم تكلفة الردود؟', 'answer' => 'ردود واتساب داخل نافذة الـ24 ساعة مجانية من Meta، وتكلفة الذكاء الاصطناعي محسوبة وشفافة في لوحتك.'],
+        ['question' => 'متى يبدأ بوتي بالعمل؟', 'answer' => 'فور موافقة الإدارة على حسابك وربط رقمك وإضافة معرفتك — عادةً خلال دقائق.'],
+    ];
+
     public function __construct(private readonly SiteSettings $site) {}
 
     public function edit(): View
@@ -55,7 +83,14 @@ class SiteController extends Controller
             $values[$field] = $this->site->get($field);
         }
 
-        return view('admin.site.edit', ['values' => $values]);
+        // The two repeater sections are seeded with the live JSON lists, or the
+        // hard-coded defaults when unset/blank/corrupt (getList never throws), so
+        // the editor always opens on the copy a visitor currently sees.
+        return view('admin.site.edit', [
+            'values' => $values,
+            'features' => $this->site->getList('features', self::FEATURES_DEFAULT),
+            'faq' => $this->site->getList('faq', self::FAQ_DEFAULT),
+        ]);
     }
 
     public function update(UpdateSiteRequest $request): RedirectResponse
@@ -69,8 +104,35 @@ class SiteController extends Controller
             $this->site->set($field, is_string($value) && $value !== '' ? $value : null);
         }
 
+        // Repeater lists: store as JSON, or null when empty so the landing page
+        // reverts to its default (§3). The rows were already cleaned (empty rows
+        // dropped, values trimmed to strings) in the FormRequest, so json_encode
+        // here only ever sees a list of {title,description}/{question,answer}.
+        $this->setList('features', $request->validated('features'));
+        $this->setList('faq', $request->validated('faq'));
+
         return redirect()
             ->route('admin.site.edit')
             ->with('status', 'site-updated');
+    }
+
+    /**
+     * Persist a validated repeater list as JSON, or null when it is empty.
+     *
+     * @param  mixed  $rows
+     */
+    private function setList(string $key, $rows): void
+    {
+        $rows = is_array($rows) ? array_values($rows) : [];
+
+        if ($rows === []) {
+            $this->site->set($key, null);
+
+            return;
+        }
+
+        $json = json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        $this->site->set($key, $json !== false ? $json : null);
     }
 }

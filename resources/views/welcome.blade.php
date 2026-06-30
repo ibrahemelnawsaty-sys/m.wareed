@@ -20,6 +20,44 @@
     $seoDescription = $site->get('seo_description', 'منصة وريد: اربط رقم واتساب عملك واترك بوتاً ذكياً يرد على عملائك آلياً عبر الذكاء الاصطناعي (Gemini · ChatGPT · DeepSeek) — على مدار الساعة، بأسلوب علامتك التجارية.');
     $seoKeywords    = $site->get('seo_keywords', 'بوت واتساب, واتساب ذكاء اصطناعي, رد آلي واتساب, خدمة عملاء آلية, شات بوت, وريد');
 
+    // Features (#features) and FAQ (#faq) are admin-editable copy stored as JSON
+    // lists in SiteSettings. The admin edits ONLY the text; the icon + accent
+    // colour of each feature stay fixed by index here. getList() returns the
+    // hard-coded default array on every failure (unset/blank/corrupt JSON), so
+    // the page can never break on bad data (§3). Every value is printed escaped
+    // via {{ }} below (§13, no HTML injection).
+    //
+    // The icon/colour pairs are static and positional: feature N on the page
+    // always uses icon/colour N, regardless of the admin's title/description.
+    $featureGlyphs = [
+        ['M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 1 1-3.5-7.1L21 4l-.9 3.4A8.96 8.96 0 0 1 21 12Z', 'emerald'],
+        ['M12 6.04A8.97 8.97 0 0 0 6 3.75c-1.05 0-2.06.18-3 .51v14.25A8.99 8.99 0 0 1 6 18c2.3 0 4.41.87 6 2.29m0-14.25a8.97 8.97 0 0 1 6-2.29c1.05 0 2.06.18 3 .51v14.25A8.99 8.99 0 0 0 18 18a8.97 8.97 0 0 0-6 2.29m0-14.25v14.25', 'gold'],
+        ['M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104a24.3 24.3 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3', 'emerald'],
+        ['M3 13.5 12 4l9 9.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7', 'night'],
+        ['M9.8 15.9 9 18.75l-.8-2.85a4.5 4.5 0 0 0-3.1-3.1L2.25 12l2.85-.8a4.5 4.5 0 0 0 3.1-3.1L9 5.25l.8 2.85a4.5 4.5 0 0 0 3.1 3.1L15.75 12l-2.85.8a4.5 4.5 0 0 0-3.1 3.1Z', 'gold'],
+        ['M11.99 3 4.5 6v6c0 4.2 3.2 7.6 7.5 9 4.3-1.4 7.5-4.8 7.5-9V6L11.99 3Z', 'emerald'],
+    ];
+
+    $featuresDefault = [
+        ['title' => 'رد آلي ذكي', 'description' => 'يرد البوت على استفسارات عملائك فوراً بأسلوب عملك، داخل نافذة واتساب الرسمية — دون انتظار.'],
+        ['title' => 'قاعدة معرفة خاصة', 'description' => 'أضف منتجاتك وسياساتك وأسئلتك الشائعة، فيرد البوت بمعلومات عملك أنت تحديداً، لا إجابات عامة.'],
+        ['title' => 'تعدد نماذج الذكاء', 'description' => 'اختر النموذج الأنسب: Gemini أو ChatGPT أو DeepSeek — وبدّل بينها في أي وقت دون تغيير شيء.'],
+        ['title' => 'لوحة تحكم وتحليلات', 'description' => 'تابع المحادثات والاستهلاك والتكلفة لحظياً من لوحة عربية أنيقة وسهلة على الجوال والحاسب.'],
+        ['title' => 'مختبر تجربة فوري', 'description' => 'جرّب بوتك حيّاً قبل ربط الرقم — اكتب رسالة وشاهد الرد لحظياً للتأكد من جودته.'],
+        ['title' => 'أمان وعزل تام', 'description' => 'بيانات كل عميل معزولة ومشفّرة بالكامل، عبر واتساب Cloud API الرسمي من Meta — بأعلى معايير الأمان.'],
+    ];
+
+    $faqDefault = [
+        ['question' => 'هل أحتاج خبرة تقنية؟', 'answer' => 'لا إطلاقاً. كل شيء يُدار من لوحة تحكم عربية بسيطة — تسجّل، تربط رقمك، وتضيف معلوماتك بخطوات واضحة.'],
+        ['question' => 'هل يستخدم رقم واتساب الخاص بي؟', 'answer' => 'نعم. يرد البوت من رقم عملك أنت عبر واتساب Cloud API الرسمي من Meta — لا أرقام مشتركة.'],
+        ['question' => 'هل بياناتي آمنة؟', 'answer' => 'بالكامل. بيانات كل عميل معزولة ومشفّرة، والمفاتيح محمية، ولا يصل أحد لبيانات عمل آخر.'],
+        ['question' => 'كم تكلفة الردود؟', 'answer' => 'ردود واتساب داخل نافذة الـ24 ساعة مجانية من Meta، وتكلفة الذكاء الاصطناعي محسوبة وشفافة في لوحتك.'],
+        ['question' => 'متى يبدأ بوتي بالعمل؟', 'answer' => 'فور موافقة الإدارة على حسابك وربط رقمك وإضافة معرفتك — عادةً خلال دقائق.'],
+    ];
+
+    $features = $site->getList('features', $featuresDefault);
+    $faq      = $site->getList('faq', $faqDefault);
+
     $isProduction = app()->environment('production');
     $appUrl = rtrim(config('app.url'), '/').'/';
 
@@ -160,15 +198,15 @@
         <h2 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">كل ما تحتاجه لأتمتة خدمة عملائك</h2>
     </div>
     <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach ([
-            ['رد آلي ذكي', 'يرد البوت على استفسارات عملائك فوراً بأسلوب عملك، داخل نافذة واتساب الرسمية — دون انتظار.', 'M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 1 1-3.5-7.1L21 4l-.9 3.4A8.96 8.96 0 0 1 21 12Z', 'emerald'],
-            ['قاعدة معرفة خاصة', 'أضف منتجاتك وسياساتك وأسئلتك الشائعة، فيرد البوت بمعلومات عملك أنت تحديداً، لا إجابات عامة.', 'M12 6.04A8.97 8.97 0 0 0 6 3.75c-1.05 0-2.06.18-3 .51v14.25A8.99 8.99 0 0 1 6 18c2.3 0 4.41.87 6 2.29m0-14.25a8.97 8.97 0 0 1 6-2.29c1.05 0 2.06.18 3 .51v14.25A8.99 8.99 0 0 0 18 18a8.97 8.97 0 0 0-6 2.29m0-14.25v14.25', 'gold'],
-            ['تعدد نماذج الذكاء', 'اختر النموذج الأنسب: Gemini أو ChatGPT أو DeepSeek — وبدّل بينها في أي وقت دون تغيير شيء.', 'M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104a24.3 24.3 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3', 'emerald'],
-            ['لوحة تحكم وتحليلات', 'تابع المحادثات والاستهلاك والتكلفة لحظياً من لوحة عربية أنيقة وسهلة على الجوال والحاسب.', 'M3 13.5 12 4l9 9.5M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7', 'night'],
-            ['مختبر تجربة فوري', 'جرّب بوتك حيّاً قبل ربط الرقم — اكتب رسالة وشاهد الرد لحظياً للتأكد من جودته.', 'M9.8 15.9 9 18.75l-.8-2.85a4.5 4.5 0 0 0-3.1-3.1L2.25 12l2.85-.8a4.5 4.5 0 0 0 3.1-3.1L9 5.25l.8 2.85a4.5 4.5 0 0 0 3.1 3.1L15.75 12l-2.85.8a4.5 4.5 0 0 0-3.1 3.1Z', 'gold'],
-            ['أمان وعزل تام', 'بيانات كل عميل معزولة ومشفّرة بالكامل، عبر واتساب Cloud API الرسمي من Meta — بأعلى معايير الأمان.', 'M11.99 3 4.5 6v6c0 4.2 3.2 7.6 7.5 9 4.3-1.4 7.5-4.8 7.5-9V6L11.99 3Z', 'emerald'],
-        ] as [$title, $desc, $icon, $color])
-            @php $iconClass = ['emerald' => 'bg-emerald/10 text-emerald', 'gold' => 'bg-gold/10 text-gold', 'night' => 'bg-night/10 text-night'][$color] ?? 'bg-emerald/10 text-emerald'; @endphp
+        @foreach ($features as $i => $feature)
+            @php
+                // Icon + accent stay fixed by index (the admin edits text only);
+                // wrap the glyph list so any extra admin rows still get one.
+                [$icon, $color] = $featureGlyphs[$i % count($featureGlyphs)];
+                $iconClass = ['emerald' => 'bg-emerald/10 text-emerald', 'gold' => 'bg-gold/10 text-gold', 'night' => 'bg-night/10 text-night'][$color] ?? 'bg-emerald/10 text-emerald';
+                $title = is_string($feature['title'] ?? null) ? $feature['title'] : '';
+                $desc = is_string($feature['description'] ?? null) ? $feature['description'] : '';
+            @endphp
             <div class="rounded-2xl border border-ink/10 bg-white p-6 shadow-luxe transition hover:-translate-y-1 hover:shadow-luxe-lg">
                 <span class="grid h-12 w-12 place-items-center rounded-xl {{ $iconClass }}">
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $icon }}"/></svg>
@@ -243,13 +281,11 @@
         <h2 class="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">أسئلة قد تدور في ذهنك</h2>
     </div>
     <div class="mt-10 space-y-3" x-data="{ open: 0 }">
-        @foreach ([
-            ['هل أحتاج خبرة تقنية؟', 'لا إطلاقاً. كل شيء يُدار من لوحة تحكم عربية بسيطة — تسجّل، تربط رقمك، وتضيف معلوماتك بخطوات واضحة.'],
-            ['هل يستخدم رقم واتساب الخاص بي؟', 'نعم. يرد البوت من رقم عملك أنت عبر واتساب Cloud API الرسمي من Meta — لا أرقام مشتركة.'],
-            ['هل بياناتي آمنة؟', 'بالكامل. بيانات كل عميل معزولة ومشفّرة، والمفاتيح محمية، ولا يصل أحد لبيانات عمل آخر.'],
-            ['كم تكلفة الردود؟', 'ردود واتساب داخل نافذة الـ24 ساعة مجانية من Meta، وتكلفة الذكاء الاصطناعي محسوبة وشفافة في لوحتك.'],
-            ['متى يبدأ بوتي بالعمل؟', 'فور موافقة الإدارة على حسابك وربط رقمك وإضافة معرفتك — عادةً خلال دقائق.'],
-        ] as $i => [$q, $a])
+        @foreach ($faq as $i => $item)
+            @php
+                $q = is_string($item['question'] ?? null) ? $item['question'] : '';
+                $a = is_string($item['answer'] ?? null) ? $item['answer'] : '';
+            @endphp
             <div class="overflow-hidden rounded-2xl border border-ink/10 bg-white">
                 <button type="button" @click="open === {{ $i }} ? open = null : open = {{ $i }}" class="flex w-full items-center justify-between gap-4 px-5 py-4 text-right">
                     <span class="font-semibold text-ink">{{ $q }}</span>

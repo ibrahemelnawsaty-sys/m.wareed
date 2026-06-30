@@ -83,6 +83,45 @@ class SiteSettings
     }
 
     /**
+     * Decode a JSON-list setting (e.g. `features`, `faq`) into an array of rows,
+     * returning $default on every failure mode so the landing page can never
+     * break on bad data (§3, no silent 500): unset/blank, malformed JSON, or a
+     * decoded value that is not a list of associative rows.
+     *
+     * Each row is kept only if it is a non-empty associative array; scalar or
+     * list entries are dropped. The shape of the fields inside a row is the
+     * caller's concern (it reads the keys it expects, escaped).
+     *
+     * @param  list<array<string, mixed>>  $default
+     * @return list<array<string, mixed>>
+     */
+    public function getList(string $key, array $default = []): array
+    {
+        $raw = $this->get($key);
+
+        if ($raw === null) {
+            return $default;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (! is_array($decoded) || ! array_is_list($decoded)) {
+            return $default;
+        }
+
+        $rows = [];
+        foreach ($decoded as $row) {
+            // Keep only associative rows. An empty array is a list (array_is_list([])
+            // is true), so it is already excluded here — no extra empty check needed.
+            if (is_array($row) && ! array_is_list($row)) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows === [] ? $default : $rows;
+    }
+
+    /**
      * Drop the in-request memo (e.g. after an external write in tests).
      */
     public function forget(): void
