@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\WhatsappAccount;
 use App\Services\AI\Contracts\BotReplyService;
+use App\Services\Inbox\HandoffDetector;
 use App\Services\WhatsApp\WhatsAppClient;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
@@ -29,10 +30,17 @@ use Throwable;
  */
 class WebhookController extends Controller
 {
+    /**
+     * Sent once when a conversation is handed off to a human agent so the
+     * customer knows a person will follow up. Kept short and template-safe.
+     */
+    private const HANDOFF_ACK = 'تم تحويل محادثتك إلى أحد موظفي خدمة العملاء، وسيتواصل معك في أقرب وقت.';
+
     public function __construct(
         private readonly TenantContext $tenant,
         private readonly BotReplyService $botReply,
         private readonly WhatsAppClient $client,
+        private readonly HandoffDetector $handoff,
     ) {}
 
     /**
@@ -105,13 +113,17 @@ class WebhookController extends Controller
         // cleared afterwards (run() restores the prior value in a finally) so
         // tenant state never leaks into a later unit of work in the same
         // process — e.g. a queue worker handling multiple jobs (§3, ADR-02).
-        $this->tenant->run($account->tenant_id, function () use ($account, $value): void {
+        // The WhatsApp profile name of the sender, used to label the inbox row.
+        $contactNameRaw = data_get($value, 'contacts.0.profile.name');
+        $contactName = is_string($contactNameRaw) ? $contactNameRaw : null;
+
+        $this->tenant->run($account->tenant_id, function () use ($account, $value, $contactName): void {
             $messages = data_get($value, 'messages');
 
             if (is_array($messages)) {
                 foreach ($messages as $message) {
                     if (is_array($message)) {
-                        $this->processIncomingMessage($account, $message);
+                        $this->processIncomingMessage($account, $message, $contactName);
                     }
                 }
             }
@@ -126,7 +138,7 @@ class WebhookController extends Controller
      *
      * @param  array<string, mixed>  $message
      */
-    private function processIncomingMessage(WhatsappAccount $account, array $message): void
+    private function processIncomingMessage(WhatsappAccount $account, array $message, ?string $contactName = null): void
     {
         $waMessageId = data_get($message, 'id');
 
@@ -147,7 +159,7 @@ class WebhookController extends Controller
 
         $incomingText = (string) (data_get($message, 'text.body') ?? '');
 
-        $conversation = $this->resolveConversation($account, $from);
+        $conversation = $this->resolveConversation($account, $from, $contactName);
 
         // Persist the inbound message (direction='in'). createOrFirst is
         // race-safe: a concurrent duplicate delivery (Meta retry) that slips
@@ -177,6 +189,22 @@ class WebhookController extends Controller
             return;
         }
 
+        // Already in human mode: a live agent owns this thread. The bot stays
+        // silent — no AI, no send. The inbound message is stored above and will
+        // surface in the agent's inbox for them to answer (§11 handoff).
+        if ($conversation->isHumanMode()) {
+            return;
+        }
+
+        // The customer is explicitly asking for a human. Flip to human mode,
+        // send a single courtesy acknowledgement, and skip the AI entirely so
+        // we never burn tokens once a handoff is requested (§11, §12).
+        if ($this->handoff->wantsHuman($incomingText)) {
+            $this->performHandoff($account, $conversation, $from);
+
+            return;
+        }
+
         // Generate + send the reply. Any AI/send failure is reported and
         // contained — the webhook must not crash (§3).
         try {
@@ -201,9 +229,37 @@ class WebhookController extends Controller
     }
 
     /**
-     * Find or create the conversation and refresh the 24h service window (§11).
+     * Hand the conversation to the human queue and send one courtesy message.
+     * The mode flip persists even if the send fails; the failure is reported
+     * and contained so the webhook never crashes (§3).
      */
-    private function resolveConversation(WhatsappAccount $account, string $from): Conversation
+    private function performHandoff(WhatsappAccount $account, Conversation $conversation, string $from): void
+    {
+        $conversation->handoffToHumans();
+
+        try {
+            $sent = $this->client->sendText($account, $from, self::HANDOFF_ACK);
+
+            Message::query()->create([
+                'conversation_id' => $conversation->id,
+                'user_id' => null,
+                'wa_message_id' => $sent['wa_message_id'],
+                'direction' => 'out',
+                'type' => 'text',
+                'body' => self::HANDOFF_ACK,
+                'status' => 'sent',
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Find or create the conversation and refresh the 24h service window (§11).
+     * Caches the WhatsApp profile name on first sight (only fills when empty, so
+     * a later blank payload never erases a name we already have, §3).
+     */
+    private function resolveConversation(WhatsappAccount $account, string $from, ?string $contactName = null): Conversation
     {
         $conversation = Conversation::query()->firstOrCreate(
             [
@@ -216,9 +272,13 @@ class WebhookController extends Controller
             ],
         );
 
-        $conversation->forceFill([
-            'window_expires_at' => now()->addHours(24),
-        ])->save();
+        $attributes = ['window_expires_at' => now()->addHours(24)];
+
+        if (is_string($contactName) && $contactName !== '' && ($conversation->contact_name ?? '') === '') {
+            $attributes['contact_name'] = $contactName;
+        }
+
+        $conversation->forceFill($attributes)->save();
 
         return $conversation;
     }

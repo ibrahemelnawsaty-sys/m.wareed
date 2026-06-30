@@ -31,5 +31,10 @@ return [
 
         // Public site content (landing page + SEO).
         'site-updated' => 'تم حفظ محتوى الموقع بنجاح.',
+
+        // Inbox — human handoff (Phase 6b).
+        'inbox-reply-sent' => 'تم إرسال الرسالة بنجاح.',
+        'inbox-claimed' => 'تم استلام المحادثة.',
+        'inbox-released' => 'تم إرجاع المحادثة للبوت.',
     ],
 ];

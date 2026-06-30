@@ -23,6 +23,7 @@ class Message extends Model
     protected $fillable = [
         'tenant_id',
         'conversation_id',
+        'user_id',
         'wa_message_id',
         'direction',
         'type',
@@ -51,5 +52,16 @@ class Message extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    /**
+     * The agent who sent this outbound message; NULL for inbound customer
+     * messages and for the bot's own replies.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

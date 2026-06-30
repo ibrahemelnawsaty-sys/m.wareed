@@ -11,6 +11,7 @@ use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\BotSettingsController;
 use App\Http\Controllers\Dashboard\ConversationController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\KnowledgeDocumentController;
 use App\Http\Controllers\Dashboard\PlaygroundController;
 use App\Http\Controllers\Dashboard\TeamController;
@@ -56,6 +57,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     // resolves through TenantScope, so a foreign conversation id 404s (§1).
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+
+    // Inbox — WhatsApp-like human handoff (Phase 6b). Open to owner AND agents
+    // (NOT inside the `owner` group): an agent's core job is to take over and
+    // reply by hand. Every {conversation} resolves through TenantScope, so a
+    // foreign id 404s (§1). Authorization (whose conversation / window) is
+    // enforced inside the controller (§13).
+    Route::get('/inbox', [InboxController::class, 'index'])->name('inbox.index');
+    Route::get('/inbox/{conversation}', [InboxController::class, 'show'])->name('inbox.show');
+    Route::get('/inbox/{conversation}/messages', [InboxController::class, 'messages'])->name('inbox.messages');
+    Route::post('/inbox/{conversation}/reply', [InboxController::class, 'reply'])->name('inbox.reply');
+    Route::post('/inbox/{conversation}/claim', [InboxController::class, 'claim'])->name('inbox.claim');
+    Route::post('/inbox/{conversation}/release', [InboxController::class, 'release'])->name('inbox.release');
 
     // Usage analytics (read-only, tenant-scoped aggregates).
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
