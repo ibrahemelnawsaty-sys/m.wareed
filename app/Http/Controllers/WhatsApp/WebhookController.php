@@ -11,6 +11,7 @@ use App\Models\WhatsappAccount;
 use App\Services\AI\Contracts\BotReplyService;
 use App\Services\Inbox\ConversationRouter;
 use App\Services\Inbox\HandoffDetector;
+use App\Services\Inbox\OptOutDetector;
 use App\Services\WhatsApp\WhatsAppClient;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
@@ -42,6 +43,7 @@ class WebhookController extends Controller
         private readonly BotReplyService $botReply,
         private readonly WhatsAppClient $client,
         private readonly HandoffDetector $handoff,
+        private readonly OptOutDetector $optOut,
         private readonly ConversationRouter $router,
     ) {}
 
@@ -182,6 +184,16 @@ class WebhookController extends Controller
         // Lost the race — the other request already handled this message.
         if (! $inbound->wasRecentlyCreated) {
             return;
+        }
+
+        // Opt-out (Meta, §11): if the customer sent an unsubscribe keyword, mark
+        // the conversation opted out so it is excluded from every future bulk
+        // campaign. Done here — after idempotency, regardless of window/mode — so
+        // it is recorded exactly once and never depends on the AI path running.
+        // It does NOT short-circuit: handoff/AI below still run as normal for the
+        // same message (the customer may say "stop" and still get a reply).
+        if ($this->optOut->wantsOptOut($incomingText)) {
+            $conversation->optOut();
         }
 
         // Free-form replies are only allowed inside the 24h service window

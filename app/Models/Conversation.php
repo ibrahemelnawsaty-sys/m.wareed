@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string $mode
  * @property int|null $assigned_to_user_id
  * @property Carbon|null $handoff_at
+ * @property Carbon|null $opted_out_at
  */
 class Conversation extends Model
 {
@@ -28,10 +29,11 @@ class Conversation extends Model
 
     /**
      * `contact_name` is plain display data and safe to mass-assign. `mode`,
-     * `assigned_to_user_id`, and `handoff_at` are DELIBERATELY ABSENT (§13):
-     * they govern who controls the conversation and whether the AI replies, so
-     * they are only ever changed through the trusted methods below
-     * (handoffToHumans / claimBy / returnToAi), never from request input.
+     * `assigned_to_user_id`, `handoff_at`, and `opted_out_at` are DELIBERATELY
+     * ABSENT (§13): they govern who controls the conversation, whether the AI
+     * replies, and whether the contact may be bulk-messaged, so they are only
+     * ever changed through the trusted methods below (handoffToHumans / claimBy /
+     * returnToAi / optOut), never from request input.
      *
      * @var list<string>
      */
@@ -65,6 +67,7 @@ class Conversation extends Model
         return [
             'window_expires_at' => 'datetime',
             'handoff_at' => 'datetime',
+            'opted_out_at' => 'datetime',
         ];
     }
 
@@ -150,6 +153,59 @@ class Conversation extends Model
             'mode' => 'ai',
             'assigned_to_user_id' => null,
         ])->save();
+    }
+
+    /**
+     * Whether this contact has unsubscribed from bulk messaging. Once opted out
+     * they are permanently excluded from every campaign (Meta opt-out, §11).
+     */
+    public function isOptedOut(): bool
+    {
+        return $this->opted_out_at !== null;
+    }
+
+    /**
+     * Mark this contact as opted out of bulk messaging (they sent an unsubscribe
+     * keyword). Written via forceFill (§13: `opted_out_at` is not mass-assignable,
+     * so a request can never clear it). Idempotent: a contact who opts out twice
+     * keeps their original opt-out timestamp.
+     */
+    public function optOut(): void
+    {
+        if ($this->opted_out_at !== null) {
+            return;
+        }
+
+        $this->forceFill(['opted_out_at' => now()])->save();
+    }
+
+    /**
+     * Re-subscribe a contact the owner has decided to bring back (e.g. an opt-out
+     * keyword fired by mistake). Written via forceFill (§13: `opted_out_at` is
+     * not mass-assignable). This is the reversibility path for opt-out (§9): a
+     * mistaken unsubscribe is never a dead end for the owner.
+     */
+    public function resubscribe(): void
+    {
+        if ($this->opted_out_at === null) {
+            return;
+        }
+
+        $this->forceFill(['opted_out_at' => null])->save();
+    }
+
+    /**
+     * Conversations eligible to receive a bulk message: opt-in is implicit (they
+     * have a conversation = they messaged us first), and they have NOT opted out.
+     * The 24h-window and cap checks happen per-recipient at send time in the job,
+     * never here — eligibility is the opt-in/opt-out gate only (§11).
+     *
+     * @param  Builder<Conversation>  $query
+     * @return Builder<Conversation>
+     */
+    public function scopeEligibleForBulk(Builder $query): Builder
+    {
+        return $query->whereNull('opted_out_at');
     }
 
     /**

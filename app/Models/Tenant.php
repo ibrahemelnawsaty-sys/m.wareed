@@ -17,6 +17,7 @@ use InvalidArgumentException;
  * @property int $max_users
  * @property string $distribution_mode
  * @property int $agent_conversation_quota
+ * @property int $daily_bulk_cap
  */
 class Tenant extends Model
 {
@@ -37,12 +38,12 @@ class Tenant extends Model
     ];
 
     /**
-     * `subscription_ends_at`, `max_users`, `distribution_mode`, and
-     * `agent_conversation_quota` are intentionally NOT in $fillable: they are
-     * written only by trusted admin/owner logic (see the management methods
-     * below), never from raw user input — a self-extended subscription, a
-     * self-raised seat limit, or a silently-flipped routing mode is a §13
-     * violation.
+     * `subscription_ends_at`, `max_users`, `distribution_mode`,
+     * `agent_conversation_quota`, and `daily_bulk_cap` are intentionally NOT in
+     * $fillable: they are written only by trusted admin/owner logic (see the
+     * management methods below), never from raw user input — a self-extended
+     * subscription, a self-raised seat limit, a silently-flipped routing mode, or
+     * a self-raised bulk cap is a §13 violation.
      *
      * @return array<string, string>
      */
@@ -53,8 +54,17 @@ class Tenant extends Model
             'max_users' => 'integer',
             'distribution_mode' => 'string',
             'agent_conversation_quota' => 'integer',
+            'daily_bulk_cap' => 'integer',
         ];
     }
+
+    /**
+     * The hard ceiling on the daily bulk-send cap. Meta's default messaging
+     * limit for a fresh/unverified number is 250 unique recipients/24h; we never
+     * let a tenant configure past it, so the customer's number is protected from
+     * the bans that follow exceeding the limit (§11, Meta number-safety).
+     */
+    public const MAX_BULK_CAP = 250;
 
     /**
      * Whether this tenant's bot is allowed to operate right now: the account
@@ -129,6 +139,29 @@ class Tenant extends Model
     {
         $this->max_users = $n;
         $this->save();
+    }
+
+    /**
+     * Set the tenant's daily bulk-send cap. OWNER/ADMIN-trusted: called via a
+     * save() on a value clamped to 1..MAX_BULK_CAP, never mass assignment, so
+     * `daily_bulk_cap` stays out of $fillable and a tenant can never raise their
+     * own cap past Meta's conservative 250 ceiling (§11, §13). The clamp is the
+     * single enforcement point for "more than 250 locks it down".
+     */
+    public function setBulkCap(int $n): void
+    {
+        $this->daily_bulk_cap = max(1, min($n, self::MAX_BULK_CAP));
+        $this->save();
+    }
+
+    /**
+     * The effective daily bulk cap: the configured value, but never above the
+     * hard 250 ceiling even if a larger value somehow reached the column. This
+     * is the number SendQuota enforces atomically (§11).
+     */
+    public function effectiveBulkCap(): int
+    {
+        return min((int) $this->daily_bulk_cap, self::MAX_BULK_CAP);
     }
 
     /**

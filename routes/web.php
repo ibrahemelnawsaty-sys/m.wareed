@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\SiteController as AdminSiteController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
 use App\Http\Controllers\Dashboard\BotSettingsController;
+use App\Http\Controllers\Dashboard\BulkCampaignController;
 use App\Http\Controllers\Dashboard\ConversationController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
@@ -115,6 +116,23 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::put('/team/distribution', [TeamController::class, 'updateDistribution'])->name('team.distribution');
         Route::put('/team/{user}/quota', [TeamController::class, 'updateAgentQuota'])->name('team.quota');
         Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
+
+        // Bulk messaging (Phase 6d) — SENSITIVE: touches customers' numbers and
+        // can get a number banned, so it is owner-only and every Meta guard
+        // (opt-in, 250 cap, 24h window, opt-out) is enforced server-side. The
+        // static {campaign}/stop is fine after the {campaign} wildcard since both
+        // are numeric ids. {campaign} resolves through TenantScope (foreign →404).
+        Route::get('/bulk', [BulkCampaignController::class, 'index'])->name('bulk.index');
+        Route::post('/bulk', [BulkCampaignController::class, 'store'])->name('bulk.store');
+        Route::get('/bulk/{campaign}', [BulkCampaignController::class, 'show'])
+            ->whereNumber('campaign')->name('bulk.show');
+        Route::post('/bulk/{campaign}/stop', [BulkCampaignController::class, 'stop'])
+            ->whereNumber('campaign')->name('bulk.stop');
+        // Reversibility for a mistaken opt-out (§9). {conversation} resolves
+        // through TenantScope (foreign → 404); the static 'optouts' segment keeps
+        // it clear of the numeric {campaign} routes above.
+        Route::post('/bulk/optouts/{conversation}/resubscribe', [BulkCampaignController::class, 'resubscribe'])
+            ->whereNumber('conversation')->name('bulk.resubscribe');
     });
 });
 
