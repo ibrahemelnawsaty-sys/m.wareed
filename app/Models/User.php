@@ -71,4 +71,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return (bool) $this->is_admin;
     }
+
+    /**
+     * Whether this user is the OWNER of their tenant. Only the owner manages the
+     * team (adds/removes agents); an agent is gated out by EnsureUserIsOwner (§13).
+     */
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
 }

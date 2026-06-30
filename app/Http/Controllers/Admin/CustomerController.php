@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SendCustomerMessageRequest;
 use App\Http\Requests\Admin\UpdateBotRequest;
+use App\Http\Requests\Admin\UpdateSeatsRequest;
 use App\Http\Requests\Admin\UpdateSubscriptionRequest;
 use App\Mail\CustomerNotification;
 use App\Models\CustomerMessage;
@@ -104,6 +105,9 @@ class CustomerController extends Controller
             ->limit(10)
             ->get();
 
+        // Current seat usage (cross-tenant read; the admin has no bound context).
+        $seatsUsed = $customer->users()->withoutGlobalScopes()->count();
+
         return view('admin.customers.show', [
             'customer' => $customer,
             'owner' => $owner,
@@ -113,6 +117,7 @@ class CustomerController extends Controller
             'costMicros' => (int) ($totals->cost_micros ?? 0),
             'providers' => UpdateBotRequest::PROVIDERS,
             'sentMessages' => $sentMessages,
+            'seatsUsed' => $seatsUsed,
         ]);
     }
 
@@ -144,6 +149,16 @@ class CustomerController extends Controller
         $this->resolveTenant($tenant)->setSubscriptionMonths((int) $request->validated('months'));
 
         return $this->backToCustomer($tenant, 'customer-subscription-updated');
+    }
+
+    public function updateSeats(UpdateSeatsRequest $request, int $tenant): RedirectResponse
+    {
+        // Trusted path: setMaxUsers writes max_users via save() on a validated
+        // value — never mass assignment, so the tenant owner cannot raise their
+        // own seat limit (§13). ADMIN-ONLY by the route's `admin` gate.
+        $this->resolveTenant($tenant)->setMaxUsers((int) $request->validated('max_users'));
+
+        return $this->backToCustomer($tenant, 'customer-seats-updated');
     }
 
     public function updateBot(UpdateBotRequest $request, int $tenant): RedirectResponse

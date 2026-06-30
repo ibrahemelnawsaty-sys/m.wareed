@@ -20,6 +20,11 @@ return [
         'customer-subscription-updated' => 'تم تحديث مدة اشتراك العميل بنجاح.',
         'customer-bot-updated' => 'تم حفظ إعدادات بوت العميل بنجاح.',
         'customer-message-sent' => 'تم إرسال الرسالة إلى العميل بنجاح.',
+        'customer-seats-updated' => 'تم تحديث عدد مقاعد فريق العميل بنجاح.',
+
+        // Tenant team management (owner).
+        'team-member-added' => 'تمت إضافة الموظف إلى الفريق بنجاح.',
+        'team-member-removed' => 'تمت إزالة الموظف من الفريق بنجاح.',
 
         // Platform AI keys settings.
         'settings-updated' => 'تم حفظ مفاتيح مزوّدي الذكاء الاصطناعي بنجاح.',

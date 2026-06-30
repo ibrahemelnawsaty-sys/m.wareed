@@ -13,6 +13,7 @@ use App\Http\Controllers\Dashboard\ConversationController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\KnowledgeDocumentController;
 use App\Http\Controllers\Dashboard\PlaygroundController;
+use App\Http\Controllers\Dashboard\TeamController;
 use App\Http\Controllers\Dashboard\WhatsappAccountController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SeoController;
@@ -46,38 +47,55 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('verified')->name('dashboard');
 
-    // Profile
+    // Profile — every team member manages their own.
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // WhatsApp connection (single account per tenant)
-    Route::get('/whatsapp', [WhatsappAccountController::class, 'edit'])->name('whatsapp.edit');
-    Route::put('/whatsapp', [WhatsappAccountController::class, 'update'])->name('whatsapp.update');
-
-    // Bot settings
-    Route::get('/bot', [BotSettingsController::class, 'edit'])->name('bot.edit');
-    Route::put('/bot', [BotSettingsController::class, 'update'])->name('bot.update');
-
-    // Knowledge base
-    Route::resource('knowledge', KnowledgeDocumentController::class)
-        ->parameters(['knowledge' => 'document'])
-        ->except(['show']);
-
-    // Conversations (read-only monitoring). Binding resolves through TenantScope,
-    // so a foreign conversation id 404s (§1).
+    // Conversations (read-only monitoring) — agents handle these. Binding
+    // resolves through TenantScope, so a foreign conversation id 404s (§1).
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
 
     // Usage analytics (read-only, tenant-scoped aggregates).
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
-    // Bot playground — ephemeral, never persists. The send endpoint is throttled
-    // to protect the API key from abuse/cost spikes (§12, §13).
-    Route::get('/playground', [PlaygroundController::class, 'index'])->name('playground.index');
-    Route::post('/playground/send', [PlaygroundController::class, 'send'])
-        ->middleware('throttle:10,1')
-        ->name('playground.send');
+    /*
+    |--------------------------------------------------------------------------
+    | Account administration — OWNER ONLY (§1, §13, least privilege)
+    |--------------------------------------------------------------------------
+    | An agent (role=agent) is blocked here: these surfaces touch the encrypted
+    | WhatsApp token, the bot prompt, the knowledge base, the metered playground,
+    | and team seats — none of which a non-owner team member should reach. They
+    | are gated by `owner` on top of `auth`+`tenant`.
+    */
+    Route::middleware('owner')->group(function () {
+        // WhatsApp connection (single account per tenant)
+        Route::get('/whatsapp', [WhatsappAccountController::class, 'edit'])->name('whatsapp.edit');
+        Route::put('/whatsapp', [WhatsappAccountController::class, 'update'])->name('whatsapp.update');
+
+        // Bot settings
+        Route::get('/bot', [BotSettingsController::class, 'edit'])->name('bot.edit');
+        Route::put('/bot', [BotSettingsController::class, 'update'])->name('bot.update');
+
+        // Knowledge base
+        Route::resource('knowledge', KnowledgeDocumentController::class)
+            ->parameters(['knowledge' => 'document'])
+            ->except(['show']);
+
+        // Bot playground — ephemeral; the send endpoint is throttled to protect
+        // the metered API key from abuse/cost spikes (§12, §13).
+        Route::get('/playground', [PlaygroundController::class, 'index'])->name('playground.index');
+        Route::post('/playground/send', [PlaygroundController::class, 'send'])
+            ->middleware('throttle:10,1')
+            ->name('playground.send');
+
+        // Team management — owner adds/removes agents up to the admin-set seat
+        // ceiling. destroy's {user} resolves through TenantScope (foreign → 404).
+        Route::get('/team', [TeamController::class, 'index'])->name('team.index');
+        Route::post('/team', [TeamController::class, 'store'])->name('team.store');
+        Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
+    });
 });
 
 /*
@@ -115,6 +133,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->whereNumber('tenant')->name('customers.subscription');
     Route::put('/customers/{tenant}/bot', [AdminCustomerController::class, 'updateBot'])
         ->whereNumber('tenant')->name('customers.bot');
+    // Seat limit (max_users) — admin-only; setMaxUsers via trusted save(), never
+    // mass assignment (§13). The tenant owner can never raise their own limit.
+    Route::put('/customers/{tenant}/seats', [AdminCustomerController::class, 'updateSeats'])
+        ->whereNumber('tenant')->name('customers.seats');
 
     // Email a customer (their tenant owner) from the admin console; every send
     // is recorded in the customer_messages audit log. Channel is 'email' only

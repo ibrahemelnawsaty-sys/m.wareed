@@ -178,6 +178,41 @@
             </div>
         </x-card>
 
+        <!-- Team seats (max_users) — ADMIN-only; setMaxUsers via trusted save (§13) -->
+        <x-card title="مقاعد الفريق" subtitle="عدد المستخدمين المسموح به للعميل (المالك + الموظفون).">
+            <div class="space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-ink/10 bg-paper/50 p-4">
+                    <div>
+                        <p class="font-mono text-[11px] uppercase tracking-wider text-ink-soft">المقاعد المستخدمة حالياً</p>
+                        <p class="mt-1 text-xl font-bold text-ink tabular-nums">{{ $seatsUsed }} <span class="text-ink-soft">/ {{ $customer->max_users }}</span></p>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('admin.customers.seats', $customer->id) }}" class="flex flex-wrap items-end gap-3">
+                    @csrf
+                    @method('PUT')
+                    <div>
+                        <x-input-label for="max_users" :value="'عدد المقاعد'" />
+                        <input
+                            id="max_users"
+                            name="max_users"
+                            type="number"
+                            min="1"
+                            max="100"
+                            step="1"
+                            value="{{ old('max_users', $customer->max_users) }}"
+                            required
+                            class="mt-1.5 w-40 rounded-xl border-ink/15 bg-white text-sm text-ink shadow-sm transition focus:border-emerald focus:ring-emerald/30"
+                        >
+                    </div>
+                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald px-5 py-2.5 text-sm font-semibold text-white shadow-luxe transition hover:bg-emerald-deep">
+                        تحديث المقاعد
+                    </button>
+                    <p class="w-full text-xs text-ink-soft">القيمة بين 1 و100. لا يستطيع العميل تجاوز هذا الحدّ.</p>
+                </form>
+            </div>
+        </x-card>
+
         <!-- Bot provider / model -->
         @if ($account)
             <x-card title="إعداد بوت العميل" subtitle="اختر مزوّد الذكاء الاصطناعي والنموذج المستخدم.">
