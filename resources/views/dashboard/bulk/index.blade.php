@@ -30,7 +30,7 @@
                     <ul class="mt-2 space-y-1.5 text-xs leading-relaxed text-ink-2">
                         <li>• <strong>موافقة مسبقة (opt-in):</strong> نُرسِل فقط لمن تفاعل معك (له محادثة) ولم ينسحب.</li>
                         <li>• <strong>سقف يومي 250:</strong> عند بلوغه يُقفَل الإرسال تلقائياً لحماية الرقم.</li>
-                        <li>• <strong>نافذة 24 ساعة:</strong> من أُغلقت نافذته يُتخطّى (يحتاج قالباً معتمداً — قريباً).</li>
+                        <li>• <strong>نافذة 24 ساعة:</strong> النص الحرّ لمن نافذته مفتوحة فقط؛ للوصول خارجها استخدم قالباً معتمداً.</li>
                         <li>• <strong>الانسحاب (opt-out):</strong> من يرسل «إيقاف/إلغاء الاشتراك/stop» يُستبعَد فوراً.</li>
                         <li>• <strong>تقييم الجودة:</strong> أوقِف الحملات عند تحوّل التقييم للأصفر/الأحمر.</li>
                     </ul>
@@ -40,9 +40,18 @@
         </div>
 
         {{-- Live figures + new-campaign form. --}}
-        <x-card title="حملة جديدة" subtitle="تُرسَل لكل المؤهّلين الآن. النص حرّ ويُرسَل لمن نافذته مفتوحة فقط.">
+        <x-card title="حملة جديدة" subtitle="تُرسَل لكل المؤهّلين الآن. النص الحرّ يصل لمن نافذته مفتوحة فقط؛ البث بقالب معتمد يصل حتى خارج نافذة 24 ساعة.">
             @php
                 $disabled = $account === null || $eligibleCount === 0 || $remaining === 0;
+                // Approved templates as a JS-safe payload for the Alpine selector.
+                $templateData = $templates->map(fn ($t) => [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'language' => $t->language,
+                    'category' => $t->category,
+                    'body_text' => $t->body_text,
+                    'variable_count' => $t->variable_count,
+                ])->values();
             @endphp
 
             <div class="mb-5 grid gap-4 sm:grid-cols-2">
@@ -62,19 +71,67 @@
                     <p class="mt-1 text-xs text-ink-soft">اربط رقمك من صفحة «ربط واتساب» لبدء الإرسال الجماعي.</p>
                 </div>
             @else
-                <form method="POST" action="{{ route('bulk.store') }}" class="space-y-5">
+                <form method="POST" action="{{ route('bulk.store') }}" class="space-y-5"
+                      x-data="bulkCampaignForm({
+                          templates: {{ Js::from($templateData) }},
+                          selectedId: {{ old('message_template_id') ? (int) old('message_template_id') : 'null' }},
+                          variables: {{ Js::from(array_values((array) old('template_variables', []))) }}
+                      })">
                     @csrf
 
+                    {{-- Template selection — only APPROVED templates are offered (§11). --}}
                     <div>
-                        <x-input-label for="body" :value="'نص الرسالة'" />
-                        <textarea id="body" name="body" rows="5" required
+                        <x-input-label for="message_template_id" :value="'استخدام قالب معتمد (اختياري)'" />
+                        @if ($templates->isEmpty())
+                            <p class="mt-1.5 rounded-xl border border-dashed border-ink/15 bg-paper/40 px-4 py-3 text-xs text-ink-soft">
+                                لا توجد قوالب معتمدة بعد. أضِف قوالبك واعتمِدها في ميتا ثم زامِنها من صفحة «القوالب المعتمدة».
+                            </p>
+                        @else
+                            <select id="message_template_id" name="message_template_id"
+                                    x-model.number="selectedId" @change="onTemplateChange()"
+                                    class="mt-1.5 block w-full rounded-xl border-ink/15 bg-white text-sm text-ink shadow-sm focus:border-emerald focus:ring-emerald/30">
+                                <option :value="null">— بدون قالب (نص حرّ، داخل النافذة فقط) —</option>
+                                @foreach ($templates as $template)
+                                    <option value="{{ $template->id }}">{{ $template->name }} ({{ $template->language }}) · {{ $template->category }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('message_template_id')" class="mt-2" />
+                            <p class="mt-1.5 text-xs text-emerald-deep" x-show="selectedId" x-cloak>
+                                البث بقالب معتمد يصل حتى لمن أُغلقت نافذة 24 ساعة لديهم.
+                            </p>
+                        @endif
+                    </div>
+
+                    {{-- Dynamic variable fields, count driven by the chosen template. --}}
+                    <div x-show="variableCount > 0" x-cloak class="space-y-3 rounded-xl border border-ink/10 bg-paper/40 p-4">
+                        <p class="text-xs font-semibold text-ink">متغيّرات القالب</p>
+                        <template x-for="i in variableCount" :key="i">
+                            <div>
+                                <label class="text-xs font-medium text-ink-soft" x-text="'المتغيّر {{ '{{' }}' + i + '{{ '}}' }}'"></label>
+                                <input type="text" required maxlength="1000"
+                                       :name="`template_variables[${i - 1}]`"
+                                       x-model="variables[i - 1]"
+                                       class="mt-1.5 block w-full rounded-xl border-ink/15 bg-white text-sm text-ink shadow-sm focus:border-emerald focus:ring-emerald/30">
+                            </div>
+                        </template>
+                        <x-input-error :messages="$errors->get('template_variables')" class="mt-1" />
+                    </div>
+
+                    {{-- Free-form body — required only when NO template is chosen. --}}
+                    <div x-show="!selectedId" x-cloak>
+                        <x-input-label for="body" :value="'نص الرسالة (للنص الحرّ)'" />
+                        <textarea id="body" name="body" rows="5"
                                   class="mt-1.5 block w-full rounded-xl border-ink/15 bg-white text-sm focus:border-emerald focus:ring-emerald"
                                   placeholder="اكتب رسالتك هنا…">{{ old('body') }}</textarea>
                         <x-input-error :messages="$errors->get('body')" class="mt-2" />
                         <p class="mt-1.5 text-xs text-ink-soft">
-                            ستُرسَل إلى {{ $eligibleCount }} جهة مؤهّلة، بحد أقصى {{ $remaining }} اليوم. من نافذته مغلقة أو منسحب يُتخطّى.
+                            النص الحرّ يصل لمن نافذته مفتوحة فقط؛ من نافذته مغلقة يُتخطّى (استخدم قالباً للوصول خارجها).
                         </p>
                     </div>
+
+                    <p class="text-xs text-ink-soft">
+                        ستُرسَل إلى {{ $eligibleCount }} جهة مؤهّلة، بحد أقصى {{ $remaining }} اليوم. المنسحبون يُستبعَدون دائماً.
+                    </p>
 
                     <div class="flex items-center justify-between border-t border-ink/10 pt-5">
                         @if ($eligibleCount > $remaining)
@@ -88,6 +145,26 @@
                         </x-primary-button>
                     </div>
                 </form>
+
+                <script>
+                    function bulkCampaignForm(initial) {
+                        return {
+                            templates: initial.templates || [],
+                            selectedId: initial.selectedId ?? null,
+                            variables: initial.variables || [],
+                            get variableCount() {
+                                if (!this.selectedId) return 0;
+                                const t = this.templates.find(t => t.id === this.selectedId);
+                                return t ? t.variable_count : 0;
+                            },
+                            onTemplateChange() {
+                                // Reset the variable inputs whenever the template changes
+                                // so stale values from a different template never submit.
+                                this.variables = Array(this.variableCount).fill('');
+                            },
+                        };
+                    }
+                </script>
             @endif
         </x-card>
 

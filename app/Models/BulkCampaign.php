@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property string $body
  * @property string $status
+ * @property int|null $message_template_id
+ * @property list<string>|null $template_variables
  * @property int $recipients_total
  * @property int $sent_count
  * @property int $skipped_count
@@ -49,13 +51,20 @@ class BulkCampaign extends Model
      * counters are server-controlled lifecycle/audit fields and are DELIBERATELY
      * ABSENT — they change only through the service/job via trusted writes (§13).
      *
+     * `message_template_id` and `template_variables` ARE safe to mass-assign here:
+     * the service still verifies the template is this tenant's AND approved AND that
+     * the variable count matches before writing — the FK is set from a validated,
+     * tenant-scoped id, never trusted blindly (§13).
+     *
      * @var list<string>
      */
     protected $fillable = [
         'tenant_id',
         'whatsapp_account_id',
         'user_id',
+        'message_template_id',
         'body',
+        'template_variables',
     ];
 
     /**
@@ -64,11 +73,22 @@ class BulkCampaign extends Model
     protected function casts(): array
     {
         return [
+            'template_variables' => 'array',
             'recipients_total' => 'integer',
             'sent_count' => 'integer',
             'skipped_count' => 'integer',
             'failed_count' => 'integer',
         ];
+    }
+
+    /**
+     * Whether this campaign sends a Meta-approved TEMPLATE (reaches contacts even
+     * outside the 24h window) rather than free-form text. The job branches on this:
+     * a template campaign SKIPS the window check but keeps opt-out + the atomic cap.
+     */
+    public function usesTemplate(): bool
+    {
+        return $this->message_template_id !== null;
     }
 
     /**
@@ -86,6 +106,17 @@ class BulkCampaign extends Model
     public function whatsappAccount(): BelongsTo
     {
         return $this->belongsTo(WhatsappAccount::class);
+    }
+
+    /**
+     * The Meta-approved template this campaign sends, or null for a free-form
+     * campaign. Resolves through TenantScope, so it can only ever be this tenant's.
+     *
+     * @return BelongsTo<MessageTemplate, $this>
+     */
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(MessageTemplate::class, 'message_template_id');
     }
 
     /**

@@ -8,10 +8,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dashboard\StoreBulkCampaignRequest;
 use App\Models\BulkCampaign;
 use App\Models\Conversation;
+use App\Models\MessageTemplate;
 use App\Models\WhatsappAccount;
 use App\Services\Bulk\BulkCampaignService;
 use App\Services\Bulk\BulkCapExceededException;
 use App\Services\Bulk\SendQuota;
+use App\Services\Bulk\TemplateNotApprovedException;
+use App\Services\Bulk\TemplateVariableMismatchException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -58,12 +61,20 @@ class BulkCampaignController extends Controller
             ->limit(50)
             ->get(['id', 'wa_contact_id', 'contact_name', 'opted_out_at']);
 
+        // Only APPROVED templates are offered for a broadcast (§11) — a campaign
+        // can never be built on a pending/rejected one. TenantScope-filtered.
+        $templates = MessageTemplate::query()
+            ->approved()
+            ->orderBy('name')
+            ->get(['id', 'name', 'language', 'category', 'body_text', 'variable_count']);
+
         return view('dashboard.bulk.index', [
             'account' => $account,
             'campaigns' => $campaigns,
             'eligibleCount' => $eligibleCount,
             'remaining' => $remaining,
             'optedOut' => $optedOut,
+            'templates' => $templates,
         ]);
     }
 
@@ -71,6 +82,11 @@ class BulkCampaignController extends Controller
      * Create + dispatch a campaign to all currently-eligible contacts. The
      * recipient set is derived server-side (opt-in/opt-out enforced), never from
      * input. A count over the day's remaining cap is rejected loudly (§3, §11).
+     *
+     * Template mode (Phase 7c): if a template was chosen, it is resolved through
+     * the TenantScope (foreign → null, never another tenant's), then re-checked for
+     * APPROVAL and variable-count match in the service — only an approved template
+     * with the right number of variables is ever queued (§11, §13).
      */
     public function store(StoreBulkCampaignRequest $request): RedirectResponse
     {
@@ -82,6 +98,29 @@ class BulkCampaignController extends Controller
             ])->withInput();
         }
 
+        // Resolve the chosen template (if any) THROUGH the tenant scope, so a
+        // foreign id can never be used — it simply resolves to null here (§1).
+        $template = null;
+        $templateId = $request->validated('message_template_id');
+
+        if ($templateId !== null) {
+            $template = MessageTemplate::query()->find($templateId);
+
+            if ($template === null) {
+                return back()->withErrors([
+                    'message_template_id' => 'القالب المختار غير موجود.',
+                ])->withInput();
+            }
+
+            // Defence in depth on top of the service's check: never queue a
+            // non-approved template (§11).
+            if (! $template->isApproved()) {
+                return back()->withErrors([
+                    'message_template_id' => 'لا يمكن استخدام قالب غير معتمد. اختر قالباً معتمداً فقط.',
+                ])->withInput();
+            }
+        }
+
         $recipients = $this->service->eligibleRecipients($account);
 
         if ($recipients->isEmpty()) {
@@ -90,17 +129,30 @@ class BulkCampaignController extends Controller
             ])->withInput();
         }
 
+        /** @var list<string> $variables */
+        $variables = array_values((array) $request->validated('template_variables', []));
+
         try {
             $this->service->create(
                 $account,
                 $request->user(),
-                (string) $request->validated('body'),
+                (string) $request->validated('body', ''),
                 $recipients,
+                $template,
+                $variables,
             );
         } catch (BulkCapExceededException $e) {
             // Loud, explicit rejection with the exact remaining headroom (§3).
             return back()->withErrors([
                 'body' => "عدد المستلمين يتجاوز المتبقّي من السقف اليومي ({$e->remaining}). قلّل العدد أو انتظر الغد.",
+            ])->withInput();
+        } catch (TemplateNotApprovedException) {
+            return back()->withErrors([
+                'message_template_id' => 'لا يمكن استخدام قالب غير معتمد. اختر قالباً معتمداً فقط.',
+            ])->withInput();
+        } catch (TemplateVariableMismatchException $e) {
+            return back()->withErrors([
+                'template_variables' => "عدد المتغيّرات لا يطابق القالب (المطلوب {$e->expected}، أُدخِل {$e->given}).",
             ])->withInput();
         }
 

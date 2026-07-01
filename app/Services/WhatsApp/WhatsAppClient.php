@@ -200,6 +200,62 @@ class WhatsAppClient
     }
 
     /**
+     * List the WABA's message templates from Meta (Phase 7c, §11). Used by
+     * TemplateSync to mirror each template's live `status` (only `approved`
+     * templates may be sent) and `category` into our cache.
+     *
+     * The request is keyed by `waba_id` (the WhatsApp Business Account that owns
+     * the templates), not the phone number id. Meta's response is UNTRUSTED input,
+     * so every element is normalised to a flat, predictable shape with safe string
+     * fields and an array `components` — a missing or oddly-typed field never throws
+     * here; TemplateSync decides what to do with each normalised row.
+     *
+     * @return list<array{name: string, language: string, category: string, status: string, components: array<int, mixed>}>
+     *
+     * @throws RuntimeException when the Cloud API call fails
+     */
+    public function listTemplates(WhatsappAccount $account): array
+    {
+        $base = rtrim((string) config('services.whatsapp.graph_base'), '/');
+        $version = (string) config('services.whatsapp.api_version');
+        $url = "{$base}/{$version}/{$account->waba_id}/message_templates";
+
+        $response = $this->dispatch($account, 'templates list', fn (): Response => $this->authed($account)
+            ->get($url, [
+                'fields' => 'name,language,category,status,components',
+                'limit' => 100,
+            ]));
+
+        /** @var mixed $data */
+        $data = $response->json('data');
+
+        if (! is_array($data)) {
+            return [];
+        }
+
+        $templates = [];
+
+        foreach ($data as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            /** @var mixed $components */
+            $components = $entry['components'] ?? [];
+
+            $templates[] = [
+                'name' => $this->stringField($entry['name'] ?? null),
+                'language' => $this->stringField($entry['language'] ?? null),
+                'category' => $this->stringField($entry['category'] ?? null),
+                'status' => $this->stringField($entry['status'] ?? null),
+                'components' => is_array($components) ? $components : [],
+            ];
+        }
+
+        return $templates;
+    }
+
+    /**
      * Run a Cloud API request and convert any failure into a clean, token-free
      * RuntimeException (§13). A non-2xx response is detected via failed() rather
      * than ->throw(), so the token-bearing RequestException is never created;

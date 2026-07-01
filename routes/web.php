@@ -14,6 +14,7 @@ use App\Http\Controllers\Dashboard\ConversationController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboxController;
 use App\Http\Controllers\Dashboard\KnowledgeDocumentController;
+use App\Http\Controllers\Dashboard\MessageTemplateController;
 use App\Http\Controllers\Dashboard\PlaygroundController;
 use App\Http\Controllers\Dashboard\ServiceMenuController;
 use App\Http\Controllers\Dashboard\TeamController;
@@ -128,6 +129,15 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::put('/team/distribution', [TeamController::class, 'updateDistribution'])->name('team.distribution');
         Route::put('/team/{user}/quota', [TeamController::class, 'updateAgentQuota'])->name('team.quota');
         Route::delete('/team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
+
+        // Meta-approved templates (Phase 7c) — SENSITIVE: only an `approved`
+        // template may be broadcast, and a template reaches contacts OUTSIDE the
+        // 24h window, so this is owner-only. Templates are created/approved in Meta
+        // Business Manager; this surface mirrors their live status (sync) and offers
+        // a manual fallback. Every template resolves through TenantScope (§1).
+        Route::get('/templates', [MessageTemplateController::class, 'index'])->name('templates.index');
+        Route::post('/templates', [MessageTemplateController::class, 'store'])->name('templates.store');
+        Route::post('/templates/sync', [MessageTemplateController::class, 'sync'])->name('templates.sync');
 
         // Bulk messaging (Phase 6d) — SENSITIVE: touches customers' numbers and
         // can get a number banned, so it is owner-only and every Meta guard

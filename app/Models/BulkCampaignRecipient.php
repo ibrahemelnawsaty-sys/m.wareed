@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *   - skipped_window   — outside the 24h window; a template is required (§11)
  *   - skipped_optout   — the contact unsubscribed
  *   - skipped_cap      — the daily cap was reached before this row's turn
+ *   - skipped_template — the campaign's template is no longer approved (§11)
  *   - failed           — the Cloud API send raised (failed_reason recorded)
  *
  * @property int $id
@@ -45,6 +46,8 @@ class BulkCampaignRecipient extends Model
     public const STATUS_SKIPPED_OPTOUT = 'skipped_optout';
 
     public const STATUS_SKIPPED_CAP = 'skipped_cap';
+
+    public const STATUS_SKIPPED_TEMPLATE = 'skipped_template';
 
     public const STATUS_FAILED = 'failed';
 

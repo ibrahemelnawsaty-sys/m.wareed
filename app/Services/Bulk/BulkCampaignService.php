@@ -8,6 +8,7 @@ use App\Jobs\SendBulkMessageJob;
 use App\Models\BulkCampaign;
 use App\Models\BulkCampaignRecipient;
 use App\Models\Conversation;
+use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\WhatsappAccount;
 use Illuminate\Support\Collection;
@@ -69,12 +70,39 @@ class BulkCampaignService
      * half-built campaign can never leak; jobs are dispatched only AFTER commit
      * (afterCommit) so a worker can never pick up a row that was rolled back.
      *
+     * Template mode (Phase 7c): when $template is given the campaign sends that
+     * Meta-approved template (reaching contacts even outside the 24h window, §11).
+     * The template MUST be approved and the number of supplied $variables MUST
+     * equal the template's variable_count — both are enforced LOUDLY here before any
+     * job is queued, so a non-approved or malformed template send never reaches Meta.
+     *
      * @param  Collection<int, Conversation>  $recipients
+     * @param  list<string>  $variables  positional body params for the template
      *
      * @throws BulkCapExceededException when the count exceeds the remaining cap
+     * @throws TemplateNotApprovedException when $template is not approved
+     * @throws TemplateVariableMismatchException when the variable count mismatches
      */
-    public function create(WhatsappAccount $account, User $user, string $body, Collection $recipients): BulkCampaign
-    {
+    public function create(
+        WhatsappAccount $account,
+        User $user,
+        string $body,
+        Collection $recipients,
+        ?MessageTemplate $template = null,
+        array $variables = [],
+    ): BulkCampaign {
+        // Template guards — checked BEFORE the cap so a malformed template campaign
+        // is rejected for the right reason and never queued (§11).
+        if ($template !== null) {
+            if (! $template->isApproved()) {
+                throw new TemplateNotApprovedException;
+            }
+
+            if (count($variables) !== $template->variable_count) {
+                throw new TemplateVariableMismatchException($template->variable_count, count($variables));
+            }
+        }
+
         $remaining = $this->quota->remainingToday($account);
 
         if ($recipients->count() > $remaining) {
@@ -83,11 +111,15 @@ class BulkCampaignService
         }
 
         /** @var BulkCampaign $campaign */
-        $campaign = DB::transaction(function () use ($account, $user, $body, $recipients): BulkCampaign {
+        $campaign = DB::transaction(function () use ($account, $user, $body, $recipients, $template, $variables): BulkCampaign {
             $campaign = BulkCampaign::query()->create([
                 'whatsapp_account_id' => $account->id,
                 'user_id' => $user->id,
-                'body' => $body,
+                'message_template_id' => $template?->id,
+                // Store the rendered template copy (or its name) as the body so the
+                // list/inbox always shows something readable; free-form keeps its text.
+                'body' => $template !== null ? $this->renderTemplateBody($template, $variables) : $body,
+                'template_variables' => $template !== null ? $variables : null,
             ]);
 
             // recipients_total is server-controlled (not fillable), set via a
@@ -122,5 +154,31 @@ class BulkCampaignService
     public function stop(BulkCampaign $campaign): void
     {
         $campaign->forceFill(['status' => BulkCampaign::STATUS_STOPPED])->save();
+    }
+
+    /**
+     * Render the template's body copy with the supplied positional variables
+     * substituted into the {{1}}, {{2}}… placeholders — a readable, descriptive
+     * `body` for the campaign list/inbox. This is DISPLAY ONLY; the actual send is
+     * the real template via the Cloud API (the job builds the components). Falls
+     * back to the template name when there is no cached body text.
+     *
+     * @param  list<string>  $variables
+     */
+    private function renderTemplateBody(MessageTemplate $template, array $variables): string
+    {
+        $body = $template->body_text;
+
+        if ($body === null || $body === '') {
+            return $template->name;
+        }
+
+        foreach ($variables as $index => $value) {
+            // Match {{n}} with optional inner spaces, mirroring countVariables'
+            // pattern, so a Meta body like "{{ 1 }}" renders too (display §5).
+            $body = preg_replace('/\{\{\s*'.($index + 1).'\s*\}\}/', $value, $body) ?? $body;
+        }
+
+        return $body;
     }
 }
