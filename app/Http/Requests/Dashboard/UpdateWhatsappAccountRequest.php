@@ -37,6 +37,10 @@ class UpdateWhatsappAccountRequest extends FormRequest
             // Optional on update: an empty token means "keep the saved one"
             // (non-destructive sync, §3). Never echoed back to the view (§13).
             'access_token' => ['nullable', 'string', 'max:1024'],
+            // Per-tenant Meta App Secret used to verify this tenant's webhook
+            // signature (ADR-01, §1). Same non-destructive rule as the token
+            // above: empty means "keep the saved one". Never echoed back (§13).
+            'app_secret' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

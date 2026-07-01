@@ -26,6 +26,7 @@ class WhatsappAccount extends Model
         'waba_id',
         'display_name',
         'access_token',
+        'app_secret',
         'ai_model',
         'ai_api_key',
         'system_prompt',
@@ -38,6 +39,7 @@ class WhatsappAccount extends Model
      */
     protected $hidden = [
         'access_token',
+        'app_secret',
         'ai_api_key',
     ];
 
@@ -48,6 +50,7 @@ class WhatsappAccount extends Model
     {
         return [
             'access_token' => 'encrypted',
+            'app_secret' => 'encrypted',
             'ai_api_key' => 'encrypted',
             'temperature' => 'integer',
         ];

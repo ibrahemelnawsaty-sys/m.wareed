@@ -26,6 +26,10 @@ class WhatsappAccountFactory extends Factory
             'waba_id' => (string) fake()->numerify('###############'),
             'display_name' => fake()->company(),
             'access_token' => fake()->sha256(),
+            // Null by default: most accounts verify the webhook against the
+            // PLATFORM secret until the tenant pastes their own app secret. A
+            // test that exercises per-tenant verification sets it explicitly.
+            'app_secret' => null,
             'ai_model' => 'gemini-2.5-flash-lite',
             'ai_api_key' => fake()->sha256(),
             'system_prompt' => fake()->sentence(),

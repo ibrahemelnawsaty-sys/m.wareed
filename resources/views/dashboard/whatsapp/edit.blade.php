@@ -1,8 +1,19 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h1 class="text-lg font-bold text-ink">ربط واتساب</h1>
-            <p class="text-sm text-ink-soft">اربط رقم عملك عبر WhatsApp Cloud API الرسمي.</p>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <h1 class="text-lg font-bold text-ink">ربط واتساب</h1>
+                <p class="text-sm text-ink-soft">اربط رقم عملك عبر WhatsApp Cloud API الرسمي.</p>
+            </div>
+            <a
+                href="{{ route('whatsapp.guide') }}"
+                class="inline-flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-ink-2 shadow-luxe transition hover:bg-gold/15"
+            >
+                <svg class="h-5 w-5 text-gold" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                </svg>
+                <span>لا تعرف من أين تبدأ؟ دليل الربط خطوة بخطوة</span>
+            </a>
         </div>
     </x-slot>
 
@@ -74,8 +85,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
                     </svg>
                     <p>
-                        قيمة <span class="font-mono font-semibold">App Secret</span> تُضبط في ملف
-                        <span class="font-mono font-semibold">.env</span> على الخادم فقط، ولا تُدار من هذه اللوحة لأسباب أمنية.
+                        الصق نفس <span class="font-mono font-semibold">Callback URL</span> و<span class="font-mono font-semibold">Verify token</span> أعلاه في تبويب
+                        <span class="font-semibold">WhatsApp → Configuration</span> بتطبيقك على Meta، ثم اضغط <span class="font-semibold">Verify and Save</span>.
+                        لا تعرف مكانها بالضبط؟ افتح
+                        <a href="{{ route('whatsapp.guide') }}" class="font-semibold text-emerald underline decoration-emerald/40 underline-offset-2 hover:text-emerald-deep">دليل الربط خطوة بخطوة</a>.
                     </p>
                 </div>
             </div>
@@ -124,6 +137,40 @@
                         @else
                             يُخزَّن التوكن مشفّراً ولا يُعرض مرة أخرى بعد الحفظ.
                         @endif
+                    </p>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between">
+                        <x-input-label for="app_secret" :value="'سرّ التطبيق (App Secret)'" />
+                        @if ($hasAppSecret)
+                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-deep">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                                مضبوط
+                            </span>
+                        @endif
+                    </div>
+                    <x-text-input
+                        id="app_secret"
+                        name="app_secret"
+                        type="password"
+                        dir="ltr"
+                        autocomplete="off"
+                        class="mt-1.5 block w-full font-mono"
+                        :placeholder="$hasAppSecret ? '••••••••••  محفوظ' : 'الصق سرّ التطبيق هنا'"
+                    />
+                    <x-input-error :messages="$errors->get('app_secret')" class="mt-2" />
+                    <p class="mt-2 text-xs text-ink-soft">
+                        من إعدادات تطبيقك على Meta:
+                        <span class="font-semibold">App Settings → Basic</span>، حقل
+                        <span class="font-mono font-semibold">App Secret</span> ← اضغط <span class="font-semibold">Show</span>.
+                        نستخدمه للتأكد أن الرسائل الواردة قادمة فعلاً من تطبيقك.
+                        @if ($hasAppSecret)
+                            اتركه فارغاً للإبقاء على القيمة المحفوظة.
+                        @endif
+                        <a href="{{ route('whatsapp.guide') }}#step-6" class="font-semibold text-emerald underline decoration-emerald/40 underline-offset-2 hover:text-emerald-deep">أين أجده بالضبط؟</a>
                     </p>
                 </div>
 

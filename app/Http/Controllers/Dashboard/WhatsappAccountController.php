@@ -27,11 +27,12 @@ class WhatsappAccountController extends Controller
 
         return view('dashboard.whatsapp.edit', [
             'account' => $account,
-            // Read-only integration values surfaced for copy (§10). The App
-            // Secret is intentionally NOT exposed — it lives only in .env (§13).
+            // Read-only integration values surfaced for copy (§10).
             'callbackUrl' => rtrim((string) config('app.url'), '/').'/api/whatsapp/webhook',
             'verifyToken' => (string) config('services.whatsapp.verify_token'),
             'hasAccessToken' => filled($account->access_token),
+            // Per-tenant Meta App Secret — never echoed back, presence only (§13).
+            'hasAppSecret' => filled($account->app_secret),
             // The wizard can only verify/test once BOTH the number id and the
             // token are saved; surface readiness so the UI can guide (§10).
             'connectionReady' => filled($account->access_token) && filled($account->phone_number_id),
@@ -39,9 +40,24 @@ class WhatsappAccountController extends Controller
     }
 
     /**
-     * Persist the WhatsApp link. The access token is cast `encrypted`, so it is
-     * stored as ciphertext (§13). An empty token field leaves the saved token
-     * untouched (non-destructive sync, §3).
+     * Show the step-by-step onboarding guide for a fully non-technical owner
+     * (§5, §10). Read-only — reuses the same callback URL / verify token
+     * values as `edit()` so the copy-paste values always match what the
+     * connection form and Meta webhook config expect.
+     */
+    public function guide(): View
+    {
+        return view('dashboard.whatsapp.guide', [
+            'callbackUrl' => rtrim((string) config('app.url'), '/').'/api/whatsapp/webhook',
+            'verifyToken' => (string) config('services.whatsapp.verify_token'),
+        ]);
+    }
+
+    /**
+     * Persist the WhatsApp link. The access token and per-tenant Meta App
+     * Secret are both cast `encrypted`, so they are stored as ciphertext
+     * (§13). Empty token/secret fields leave the saved values untouched
+     * (non-destructive sync, §3).
      */
     public function update(UpdateWhatsappAccountRequest $request): RedirectResponse
     {
@@ -52,6 +68,11 @@ class WhatsappAccountController extends Controller
         $token = $request->validated('access_token');
         if (filled($token)) {
             $data['access_token'] = $token;
+        }
+
+        $secret = $request->validated('app_secret');
+        if (filled($secret)) {
+            $data['app_secret'] = $secret;
         }
 
         $account->fill($data)->save();
